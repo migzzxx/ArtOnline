@@ -52,26 +52,15 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 32px 0;
+    padding: 20px 0;
 
-    .top {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-bottom: 20px;
-
-        img {
-            height: 130px;
-            width: auto;
-            margin: 0;
-        }
-
-        h2 {
-            font-family: 'Geom', sans-serif;
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1a1a1a;
-        }
+    h2 {
+        font-family: 'Geom', sans-serif;
+        font-size: 2.3rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        padding-right: 60px;
+        margin-bottom: 15px;
     }
 
     .input {
@@ -79,7 +68,7 @@ body {
         display: flex;
         flex-direction: column;
         gap: 5px;
-        margin-bottom: 15px;
+        margin-bottom: 8px;
 
         p {
             font-family: 'Inter', sans-serif;
@@ -120,7 +109,7 @@ body {
         }
     }
 
-    .logbtn {
+    .signbtn {
         font-family: 'Inter', sans-serif;
         width: 130px;
         height: 45px;
@@ -131,17 +120,17 @@ body {
         border: none;
         border-radius: 44px;
         cursor: pointer;
-        margin-top: 5px;
+        margin-bottom: 10px;
     }
 
-    .create {
+    .tos {
         font-family: 'Inter', sans-serif;
-        margin-top: auto;
         display: flex;
-        gap: 6px;
+        gap: 5px;
+        margin-bottom: 25px;
 
         p, a {
-            font-size: .85rem;
+            font-size: .75rem;
             font-weight: 500;
             color: #1b1b1b;
         }
@@ -150,6 +139,13 @@ body {
             font-weight: 700;
         }
     }
+
+    a {
+        font-size: .9rem;
+        font-weight: 700;
+        color: #1b1b1b;
+        }
+
 }
 
 .footer {
