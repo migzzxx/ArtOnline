@@ -213,7 +213,7 @@ body {
                     }
                 }
 
-                .set1 {
+                .set2 {
                     color: #3e4a8e;
                     border-color: #3e4a8e;
                 }
@@ -234,25 +234,24 @@ body {
     gap: 10px;
     overflow-y: auto;
     height: 100%;
-}
 
-.faq-content h3 {
-    font-family: 'Geom', sans-serif;
-    font-size: 1.35rem;
-    font-weight: 600;
-    color: black;
-    margin-top: 24px;
-}
+    h3 {
+        font-family: 'Geom', sans-serif;
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: black;
+        margin-top: 24px;
+    }
 
-.faq-content p {
-    font-family: 'Inter', sans-serif;
-    font-size: 1rem;
-    font-weight: 400;
-    color: #2b2b2b;
-    line-height: 1.6;
-    margin-bottom: 5px;
+    p {
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        font-weight: 400;
+        color: #2b2b2b;
+        line-height: 1.6;
+        margin-bottom: 5px;
+    }
 }
-
 
 .footer {
     background-color: #ffffff;
