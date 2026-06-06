@@ -106,8 +106,9 @@ body {
     flex-direction: column;
     padding: 25px 25px;
     z-index: 2;
-    justify-content: space-between;
     box-sizing: border-box;
+    justify-content: center;
+    gap: 30px;
 
     .top {
         width: 100%;
