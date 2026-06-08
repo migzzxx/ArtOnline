@@ -1,5 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Geom:ital,wght@0,300..900;1,300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 
 *, *::before, *::after {
     box-sizing: border-box;
@@ -93,7 +93,7 @@ body {
             cursor: pointer;
         }
 
-        .home {
+        .artist {
             background-color: #DCC863;
         }
     }
@@ -101,10 +101,10 @@ body {
 
 .mid {
     width: 100%;
-    height: 100%;
     display: flex;
+    flex: 1;
     flex-direction: column;
-    padding: 25px 25px;
+    padding: 15px 25px;
     justify-content: space-evenly;
     z-index: 2;
 
@@ -114,7 +114,7 @@ body {
         justify-content: space-between;
 
         .tm {
-            background-color: #3e4a8e;
+            background-color: white;
             height: 100%;
             width: .5%;
             border-radius: 50px;
@@ -124,51 +124,49 @@ body {
             width: fit-content;
             height: 100%;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             justify-content: space-evenly;
+            gap: 25px;
+            margin-right: 27px;
+
+            img {
+                width: 250px;
+                height: 250px;
+                object-fit: cover;
+                align-self:center;
+            }
+
+            .artist-info {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
 
             h1 {
                 font-family: 'Geom', sans-serif;
                 font-size: 2.6rem;
                 font-weight: 600;
-                color: #1b1b1b;
+                color: white;
+                text-shadow: 0 4px 10px rgba(0, 0, 0, 0.467);
             }
 
-            p {
-                font-family: 'Geom', sans-serif;
-                font-size: 1.3rem;
-                font-weight: 500;
-                color: #1b1b1b;
-            }
-
-            .btns {
+            .bullets {
                 display: flex;
-                align-items: center;
-                gap: 20px;
-
-                button {
-                    font-family: 'Geom', sans-serif;
-                    font-size: 1.2rem;
-                    font-weight: 600;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 10px 20px;
-                    border-radius: 100px;
-                    border: none;
-                    cursor: pointer;
-                    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.250);
-                }
-
-                .req {
-                    background-color: #3e4a8e;
-                    color: white;
-                }
-
-                .view {
-                    background-color: #1b1b1b;
-                    color: white;
-                }
+                margin: 5px 0 0 0;
+                padding: 0;
+                list-style-position: inside;
+                flex-direction: column;
+                gap: 8px;
+                color: white;
+                font-size: large;
+                font-family: 'Geom';
             }
+
+                li {
+                    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.783);
+                }
+                
         }
 
         .tr {
@@ -176,44 +174,53 @@ body {
             height: 100%;       
             display: flex;
             flex-direction: column;
+            padding-left: 40px;
 
             h1 {
                 font-family: 'Geom', sans-serif;
                 font-size: 2.6rem;
                 font-weight: 600;
-                color: #1b1b1b;
+                color: white;
                 text-align: right;
+                text-shadow: 0 4px 10px rgba(0, 0, 0, 0.467);
             }
 
-            .cards {
-                height: 100%;
-                width: 100%;
+            .can-draw {
                 display: flex;
-                align-items: center;
-                justify-content: right;
-                gap: 60px;
+                flex-direction: column;
+                gap: 12px;
+                margin-bottom: 10px;
+                flex-wrap: wrap;
+            }
 
-                .cds {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 5px;
-                    margin-top: 10px;
+            .not-draw {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                flex-wrap: wrap;
+            }
 
-                    img {
-                        width: 200px;
-                        height: 200px;
-                        box-shadow: 0 5px 5px rgba(0, 0, 0, 0.250);
-                    }
 
-                    p {
-                        font-family: 'Geom', sans-serif;
-                        font-size: 1.3rem;
-                        font-weight: 500;
-                        color: #1b1b1b;
-                    }
+            .tags {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 10px 10px;
+                margin:0;
+                padding:0;
+                list-style-type: none;
+                justify-content: flex-end;
+            
+
+                li {
+                    background-color: rgba(151, 141, 141, 0.123);
+                    color: white;
+                    padding: 6px 10px;
+                    font-weight: bold;
+                    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.467);
+                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.332);
+                    font-size: large;
                 }
-
             }
         }
     }
@@ -222,89 +229,86 @@ body {
         width: 100%;
         display: flex;
         justify-content: space-between;
-
-        .bm {
-            background-color: #3e4a8e;
-            height: 100%;
-            width: .5%;
-            border-radius: 50px;
-        }
     
         .bl {
-            width: 800px;
+            width: 100%;
             height: 100%;
             display: flex;
             gap: 15px;
             align-items: center;
-
-            img {
-                height: 250px;
-                width: 250px;
-                box-shadow: 0 5px 5px rgba(0, 0, 0, 0.250);
-            }
 
             .about {
                 height: 100%;
                 width: 100%;
                 display: flex;
                 flex-direction: column;
-                gap: 16px;
-
-                h1 {
-                    font-family: 'Geom', sans-serif;
-                    font-size: 2.3rem;
-                    font-weight: 600;
-                    color: #1b1b1b;
-                }
+                gap: 10px;
 
                 .texts {
-                    background-color: #3e4a8e;
-                    width: 100%;
+                    background-color: #00000077;
+                    width: 800px;
                     height: 100%;
                     display: flex;
                     flex-direction: column;
-                    justify-content: space-between;
-                    padding: 0px 12px 12px 12px;
+                    justify-content: flex-start;
+                    padding: 0px 10px 10px 10px;
                     box-shadow: 0 5px 5px rgba(0, 0, 0, 0.250);
 
                     h1 {
                         font-family: 'Geom', sans-serif;
                         font-size: 2rem;
-                        font-weight: 600;
-                        color: #ECE57C;
+                        color: white;
+                        margin-top: 15px;
                     }
                     
-                    p {
-                        font-family: 'Geom', sans-serif;
-                        font-size: 1rem;
-                        font-weight: 500;
-                        color: #ECE57C;
+                    .texts2 {
+                        display: flex;
+                        flex-direction: column;
+                        gap:12px;
+                        padding-left: 20px;
+                        margin:15px 0;
+
+                        li {
+                            font-family: 'Geom', sans-serif;
+                            font-size: 1rem;
+                            color: white;
+                        }
+                    }
+
+                    .links {
+                        display: flex;
+                        flex-direction: row;
+                        justify-content: end;
+                        gap:25px;
                     }
                     
-                    a {
-                        font-family: 'Geom', sans-serif;
-                        font-size: 1rem;
-                        font-weight: 500;
-                        color: #ECE57C;
-                        text-align: right;
-                    }
+                        a {
+                            font-family: 'Geom', sans-serif;
+                            font-size: 1rem;
+                            color: white;
+                            text-align: right;
+                            margin-top: 50px;
+                        }
                 }
             }
         }
 
         .br {
-            width: 600px;
+            width: 1000px;
             height: 100%;
             display: flex;
             flex-direction: column;
             gap: 18px;
-            text-align: center;
+            align-items: flex-start;
 
             h1 {
                 font-family: 'Geom', sans-serif;
-                font-size: 2rem;
+                font-size: 2.6rem;
                 font-weight: 600;
-                color: #1b1b1b;
+                color: white;
+                display: block;
+                text-shadow: 0 4px 10px rgba(0, 0, 0, 0.467);
+                text-align: left;
             }
 
             .stairs {
@@ -314,8 +318,9 @@ body {
                 flex-direction: column;
                 justify-content: space-between;
                 align-items: center;
+                
 
-                p {
+                a {
                     font-family: 'Geom', sans-serif;
                     font-size: 1.2rem;
                     font-weight: 500;
@@ -323,30 +328,31 @@ body {
                     border-radius: 10px;
                     width: fit-content;
                     box-shadow: 0 5px 5px rgba(0, 0, 0, 0.250);
+                    color: white;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 5px;
+                }
+
+                svg {
+                    width: 1.5rem;
+                    height: 1.5rem;
                 }
 
                 .s1 {
-                    color: #ECE57C;
-                    background-color: #3e4a8e;
                     transform: translate(-80px);
                 }
 
                 .s2 {
-                    color: white;
-                    background-color: #1b1b1b;
-                    transform: translate(-40px);
+                    transform: translate(-20px);
                 }
 
                 .s3 {
-                    color: #ECE57C;
-                    background-color: #3e4a8e;
                     transform: translate(40px);
                 }
 
                 .s4 {
-                    color: white;
-                    background-color: #1b1b1b;
-                    transform: translate(80px);
+                    transform: translate(135px);
                 }
             }
         }
@@ -354,11 +360,11 @@ body {
 }
 
 
+
 .footer {
     background-color: #ffffff;
     width: 100%;
     height: 50px;
-    flex-shrink: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
