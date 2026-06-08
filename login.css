@@ -123,8 +123,7 @@ body {
 
     .logbtn {
         font-family: 'Inter', sans-serif;
-        width: 130px;
-        height: 45px;
+        width: fit-content;
         font-size: 1.3rem;
         font-weight: 600;
         background-color: #3e4a8e;
@@ -133,6 +132,7 @@ body {
         border-radius: 44px;
         cursor: pointer;
         margin-top: 5px;
+        padding: 12px 36px;
     }
 
     .create {
