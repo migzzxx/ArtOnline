@@ -1,0 +1,213 @@
+@import url('https://fonts.googleapis.com/css2?family=Geom:ital,wght@0,300..900;1,300..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+.material-symbols-rounded {
+    font-size: 36px;
+    user-select: none;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    width: 100%;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(180deg, #FFFFFF 75%, #9FA5C7 87.5%, #3E4A8E 100%);
+    background-attachment: fixed;
+}
+
+.header {
+    width: 100%;
+    height: 85px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 25px;
+    user-select: none;
+
+    .left {
+        height: 100%;
+        width: fit-content;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+
+        img {
+            height: 90%;
+            width: auto;
+            margin: 0;
+        }
+
+        h1 {
+            font-family: 'Geom', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+    }
+
+    .right {
+        background-color: #ffffff;
+        height: 50px;
+        padding: 0 10px;
+        border-radius: 100px;
+        box-shadow: 0 5px 5px rgba(0, 0, 0, 0.250);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 5px;
+
+        a {
+            color: black;
+            font-size: 1rem;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            width: fit-content;
+            height: 35px;
+            border-radius: 100px;
+            cursor: pointer;
+        }
+        
+        .gallery {
+            background-color: #90cfff;
+        }
+    }
+}
+
+.gallery-frame {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: minmax(150px, auto); 
+    grid-auto-flow: dense;
+    gap: 20px;
+    padding: 48px;
+    padding-bottom: 100px;
+    max-width: 1440px;
+    margin: auto;
+}
+
+.card {
+    background: #0F2854;
+    border-radius: 20px;
+    padding: 20px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+    strong {
+        font-size: 1.5rem;
+        margin-top: auto;
+    }
+
+.like {
+    position: absolute;
+    bottom: 15px;
+    right: 25px;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background:transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.2s ease;
+    color: white;
+}
+    .material-symbols-outlined {
+        font-size: 30px;
+    }
+
+.like-count {
+    font-size: 25px;
+    color:white;
+    transition: all 0.2s ease;
+}
+
+.card:hover .like {
+    opacity: 1;
+    transform: scale(1);
+    gap: 5px;
+}
+
+
+.short { 
+    grid-row: span 1; 
+}
+
+.med { 
+    grid-row: span 2; 
+}
+
+.tall {
+    grid-row: span 3; 
+}
+
+.rect {
+    grid-row: span 2; 
+    grid-column: span 2;
+}
+
+
+.footer {
+    background-color: white;
+    width: 100%;
+    height: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    opacity: 0.8;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+
+    p {
+        color: #1b1b1b;
+        font-size: 1rem;
+    }
+
+    .cont {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+
+        p {
+            font-weight: 500;
+        }
+
+        svg {
+            width: 20px;
+            height: 20px;
+            fill: #1b1b1b;
+        }
+
+        a {
+            color: #3e4a8e;
+            font-size: 1rem;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+    }  
+}
