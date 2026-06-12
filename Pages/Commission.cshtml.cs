@@ -20,6 +20,10 @@ public class CommissionModel : PageModel
     }
 
     public List<Commission> Commissions { get; set; } = new();
+    public List<ChatMessage> ChatMessages { get; set; } = new();
+    public int SelectedCommissionId { get; set; }
+    public Commission? ViewingCommission { get; set; }
+    public bool IsEditing { get; set; }
     public bool ShowSuccess { get; set; }
 
     [BindProperty] public string Email { get; set; } = "";
@@ -42,7 +46,7 @@ public class CommissionModel : PageModel
 
     public string ErrorMessage { get; set; } = "";
 
-    public void OnGet()
+    public void OnGet(int? commissionId, bool edit = false)
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         Commissions = _db.Commissions
@@ -52,6 +56,106 @@ public class CommissionModel : PageModel
 
         if (TempData["Success"] != null)
             ShowSuccess = true;
+
+        // Load selected commission for viewing/editing
+        if (commissionId.HasValue && Commissions.Any(c => c.Id == commissionId.Value))
+        {
+            SelectedCommissionId = commissionId.Value;
+            ViewingCommission = Commissions.First(c => c.Id == commissionId.Value);
+            IsEditing = edit && ViewingCommission.Status == "Pending";
+        }
+
+        if (SelectedCommissionId > 0)
+        {
+            ChatMessages = _db.ChatMessages
+                .Where(m => m.CommissionId == SelectedCommissionId)
+                .OrderBy(m => m.SentAt)
+                .ToList();
+        }
+    }
+
+    public async Task<IActionResult> OnPostSendMessageAsync(int SelectedCommissionId, string ChatMessageText)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var username = User.FindFirst(ClaimTypes.Name)!.Value;
+
+        if (!string.IsNullOrWhiteSpace(ChatMessageText) && SelectedCommissionId > 0)
+        {
+            var msg = new ChatMessage
+            {
+                CommissionId = SelectedCommissionId,
+                SenderId = userId,
+                SenderUsername = username,
+                IsArtist = false,
+                Message = ChatMessageText.Trim(),
+                SentAt = DateTime.Now
+            };
+
+            _db.ChatMessages.Add(msg);
+            await _db.SaveChangesAsync();
+        }
+
+        return RedirectToPage("/Commission", new { commissionId = SelectedCommissionId });
+    }
+
+    public async Task<IActionResult> OnPostUpdateCommissionAsync(int CommissionId)
+    {
+        var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var commission = _db.Commissions.FirstOrDefault(c => c.Id == CommissionId && c.UserId == userId);
+
+        if (commission == null || commission.Status != "Pending")
+        {
+            return RedirectToPage("/Commission", new { commissionId = CommissionId });
+        }
+
+        // Update text fields
+        commission.Email = Email;
+        commission.ContactNumber = ContactNumber;
+        commission.SocialAccountLink = SocialAccountLink;
+        commission.RushCommission = RushCommission == "Yes";
+        commission.Subject = Subject;
+        commission.CharacterReference = CharacterReference;
+        commission.CommissionType1 = CommissionType1;
+        commission.CommissionType2 = CommissionType2;
+        commission.CommissionType3 = CommissionType3;
+        commission.CanvasSize = CanvasSize == "Other" ? CustomCanvasSize ?? "" : CanvasSize;
+        commission.OtherNotes = OtherNotes;
+        commission.ModeOfPayment = ModeOfPayment;
+        commission.EstimatedBudget = EstimatedBudget;
+
+        // Handle file uploads — only update if new file provided
+        var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "commissions", userId.ToString());
+        Directory.CreateDirectory(uploadDir);
+
+        if (CharacterSheet != null)
+        {
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(CharacterSheet.FileName)}";
+            var filePath = Path.Combine(uploadDir, fileName);
+            using var stream = new FileStream(filePath, FileMode.Create);
+            await CharacterSheet.CopyToAsync(stream);
+            commission.CharacterSheetPath = $"/uploads/commissions/{userId}/{fileName}";
+        }
+
+        if (ReferencePose != null)
+        {
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(ReferencePose.FileName)}";
+            var filePath = Path.Combine(uploadDir, fileName);
+            using var stream = new FileStream(filePath, FileMode.Create);
+            await ReferencePose.CopyToAsync(stream);
+            commission.ReferencePosePath = $"/uploads/commissions/{userId}/{fileName}";
+        }
+
+        if (ReferenceBackground != null)
+        {
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(ReferenceBackground.FileName)}";
+            var filePath = Path.Combine(uploadDir, fileName);
+            using var stream = new FileStream(filePath, FileMode.Create);
+            await ReferenceBackground.CopyToAsync(stream);
+            commission.ReferenceBackgroundPath = $"/uploads/commissions/{userId}/{fileName}";
+        }
+
+        await _db.SaveChangesAsync();
+        return RedirectToPage("/Commission", new { commissionId = CommissionId });
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -66,7 +170,6 @@ public class CommissionModel : PageModel
             return Page();
         }
 
-        // Validate numeric contact number
         if (!ContactNumber.All(char.IsDigit))
         {
             ErrorMessage = "Contact number must contain only numbers.";
@@ -81,7 +184,6 @@ public class CommissionModel : PageModel
             return Page();
         }
 
-        // At least one of CharacterSheet or CharacterReference must have input
         if (CharacterSheet == null && string.IsNullOrWhiteSpace(CharacterReference))
         {
             ErrorMessage = "Please provide either a Character Sheet upload or a Character Reference description.";
