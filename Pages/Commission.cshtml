@@ -1,5 +1,7 @@
 @page
 @model ArtOnline.Pages.CommissionModel
+@removeTagHelper "Microsoft.AspNetCore.Mvc.TagHelpers.OptionTagHelper, Microsoft.AspNetCore.Mvc.TagHelpers"
+@using System.IO
 
 <!DOCTYPE html>
 <html lang="en">
@@ -39,7 +41,7 @@
                 </div>
                 @foreach (var c in Model.Commissions)
                 {
-                    <div class="queue">
+                    <div class="queue" style="cursor: pointer;" onclick="window.location.href='/Commission?commissionId=@c.Id'">
                         <div class="pleft" style="background-color: @(c.Status == "Pending" ? "#ec7c7c" : c.Status == "Working" ? "#ecb07c" : "#7cec7c")"></div>
                         <div class="pending">
                             <div class="pmid">
@@ -73,15 +75,53 @@
                 <div class="divh">
                     <h1>Chats</h1>
                 </div>
+                <div class="chat-area" id="chatArea">
+                    @foreach (var msg in Model.ChatMessages)
+                    {
+                        var timeDiff = DateTime.Now - msg.SentAt;
+                        var timeDisplay = timeDiff.TotalHours < 24 ? msg.SentAt.ToString("h:mm tt") : msg.SentAt.ToString("dd/MM/yyyy");
+                        var displayName = msg.IsArtist ? "Amoreivc" : "You";
+                        <div class="chat-msg">
+                            <span class="sender">@displayName</span>
+                            <div class="bubble @(msg.IsArtist ? "artist-msg" : "user-msg")">@msg.Message</div>
+                            <span class="time">@timeDisplay</span>
+                        </div>
+                    }
+                </div>
+                @if (Model.SelectedCommissionId > 0)
+                {
+                    <form method="post" asp-page-handler="SendMessage" class="chat-input-area">
+                        <input type="hidden" name="SelectedCommissionId" value="@Model.SelectedCommissionId" />
+                        <input type="text" name="ChatMessageText" placeholder="Type a message..." required />
+                        <button type="submit"><span class="material-symbols-rounded">send</span></button>
+                    </form>
+                }
             </div>
         </div>
         <div class="midr">
             <div class="divh">
                 <h1>Fill Out Form</h1>
                 <p>(Commission Status: OPEN)</p>
-                <button type="button" id="toggleFormBtn">
-                    <span class="material-symbols-rounded">add_2</span>
-                </button>
+                <div style="display:flex; align-items:center; position:absolute; right:15px; gap:15px;">
+                    @if (Model.ViewingCommission != null && Model.ViewingCommission.Status == "Pending")
+                    {
+                        @if (Model.IsEditing)
+                        {
+                            <a href="/Commission?commissionId=@Model.SelectedCommissionId" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; text-decoration:none; margin-right:10px;">
+                                <span class="material-symbols-rounded" style="font-size:1.8rem; color:#9e3e3e;">close</span>
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="/Commission?commissionId=@Model.SelectedCommissionId&edit=true" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; text-decoration:none; margin-right:10px;">
+                                <span class="material-symbols-rounded" style="font-size:1.8rem; color:#1b1b1b;">edit</span>
+                            </a>
+                        }
+                    }
+                    <button type="button" id="toggleFormBtn" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; position:static;">
+                        <span class="material-symbols-rounded">add_2</span>
+                    </button>
+                </div>
             </div>
             <div class="wrap">
                 @if (Model.ShowSuccess)
@@ -102,7 +142,182 @@
                         </div>
                     </div>
                 }
+                else if (Model.ViewingCommission != null)
+                {
+                    @* === VIEW/EDIT EXISTING COMMISSION === *@
+                    var vc = Model.ViewingCommission;
+                    var disabled = Model.IsEditing ? "" : "disabled";
+                    <form method="post" asp-page-handler="UpdateCommission" enctype="multipart/form-data" id="viewForm">
+                        <input type="hidden" name="CommissionId" value="@vc.Id" />
+                        <div class="form">
+                            <div class="fhead">
+                                <h1>Commission Details</h1>
+                                <p>Status: <strong>@vc.Status</strong> — Submitted @vc.DateSubmitted.ToString("d MMM yyyy") at @vc.TimeSubmitted</p>
+                            </div>
+                            <div class="cont">
+                                <h1>Contact Information</h1>
+                                <div class="inputs">
+                                    <div class="input">
+                                        <p>Email Address</p>
+                                        <input type="text" class="box" name="Email" value="@vc.Email" @disabled>
+                                    </div>
+                                    <div class="input">
+                                        <p>Contact Number</p>
+                                        <input type="tel" class="box" name="ContactNumber" value="@vc.ContactNumber" @disabled>
+                                    </div>
+                                    <div class="input">
+                                        <p>Social Account Link</p>
+                                        <input type="text" class="box" name="SocialAccountLink" value="@vc.SocialAccountLink" @disabled>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="det">
+                                <h1>Art Details</h1>
+                                <div class="inputs">
+                                    <div class="input">
+                                        <p>Rush Commission?</p>
+                                        <select name="RushCommission" @disabled>
+                                            <option value="Yes" @(vc.RushCommission ? "selected" : "")>Yes</option>
+                                            <option value="No" @(!vc.RushCommission ? "selected" : "")>No</option>
+                                        </select>
+                                    </div>
+                                    <div class="input">
+                                        <p>Subject</p>
+                                        <input type="text" class="box" name="Subject" value="@vc.Subject" @disabled>
+                                    </div>
+                                    <div class="input">
+                                        <p>Character Sheet</p>
+                                        @if (Model.IsEditing)
+                                        {
+                                            <label class="text">
+                                                <span class="placeholder">@(string.IsNullOrEmpty(vc.CharacterSheetPath) ? "No file uploaded" : System.IO.Path.GetFileName(vc.CharacterSheetPath))</span>
+                                                <span class="material-symbols-rounded">upload</span>
+                                            </label>
+                                            <input type="file" accept="image/jpeg, image/png" class="file" name="CharacterSheet">
+                                        }
+                                        else
+                                        {
+                                            <input type="text" class="box" value="@(string.IsNullOrEmpty(vc.CharacterSheetPath) ? "No file uploaded" : System.IO.Path.GetFileName(vc.CharacterSheetPath))" disabled>
+                                        }
+                                    </div>
+                                    <div class="input">
+                                        <p>Character Reference</p>
+                                        <input type="text" class="box" name="CharacterReference" value="@vc.CharacterReference" @disabled>
+                                    </div>
+                                    <p>Commission Type</p>
+                                    <div class="comwrap">
+                                        <div class="input">
+                                            <select name="CommissionType1" @disabled>
+                                                <option value="Icon" @(vc.CommissionType1 == "Icon" ? "selected" : "")>Icon</option>
+                                                <option value="Bust-Up" @(vc.CommissionType1 == "Bust-Up" ? "selected" : "")>Bust-Up</option>
+                                                <option value="Half Body" @(vc.CommissionType1 == "Half Body" ? "selected" : "")>Half Body</option>
+                                                <option value="Whole Body" @(vc.CommissionType1 == "Whole Body" ? "selected" : "")>Whole Body</option>
+                                            </select>
+                                        </div>
+                                        <div class="input">
+                                            <select name="CommissionType2" @disabled>
+                                                <option value="One Person" @(vc.CommissionType2 == "One Person" ? "selected" : "")>One Person</option>
+                                                <option value="Two" @(vc.CommissionType2 == "Two" ? "selected" : "")>Two</option>
+                                                <option value="Three" @(vc.CommissionType2 == "Three" ? "selected" : "")>Three</option>
+                                                <option value="More" @(vc.CommissionType2 == "More" ? "selected" : "")>More</option>
+                                            </select>
+                                        </div>
+                                        <div class="input">
+                                            <select name="CommissionType3" @disabled>
+                                                <option value="Sketch" @(vc.CommissionType3 == "Sketch" ? "selected" : "")>Sketch</option>
+                                                <option value="Fully Rendered" @(vc.CommissionType3 == "Fully Rendered" ? "selected" : "")>Fully Rendered</option>
+                                                <option value="Chibi" @(vc.CommissionType3 == "Chibi" ? "selected" : "")>Chibi</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="input">
+                                        <p>Reference Pose</p>
+                                        @if (Model.IsEditing)
+                                        {
+                                            <label class="text">
+                                                <span class="placeholder">@(string.IsNullOrEmpty(vc.ReferencePosePath) ? "No file" : System.IO.Path.GetFileName(vc.ReferencePosePath))</span>
+                                                <span class="material-symbols-rounded">upload</span>
+                                            </label>
+                                            <input type="file" accept="image/jpeg, image/png" class="file" name="ReferencePose">
+                                        }
+                                        else
+                                        {
+                                            <input type="text" class="box" value="@(string.IsNullOrEmpty(vc.ReferencePosePath) ? "No file" : System.IO.Path.GetFileName(vc.ReferencePosePath))" disabled>
+                                        }
+                                    </div>
+                                    <div class="input">
+                                        <p>Reference Background</p>
+                                        @if (Model.IsEditing)
+                                        {
+                                            <label class="text">
+                                                <span class="placeholder">@(string.IsNullOrEmpty(vc.ReferenceBackgroundPath) ? "No file uploaded" : System.IO.Path.GetFileName(vc.ReferenceBackgroundPath))</span>
+                                                <span class="material-symbols-rounded">upload</span>
+                                            </label>
+                                            <input type="file" accept="image/jpeg, image/png" class="file" name="ReferenceBackground">
+                                        }
+                                        else
+                                        {
+                                            <input type="text" class="box" value="@(string.IsNullOrEmpty(vc.ReferenceBackgroundPath) ? "No file uploaded" : System.IO.Path.GetFileName(vc.ReferenceBackgroundPath))" disabled>
+                                        }
+                                    </div>
+                                    <div class="input">
+                                        <p>Canvas Size</p>
+                                        @if (Model.IsEditing)
+                                        {
+                                            <select name="CanvasSize" id="editCanvasSize">
+                                                <option value="1080x1080" @(vc.CanvasSize == "1080x1080" ? "selected" : "")>1080 x 1080</option>
+                                                <option value="1920x1080" @(vc.CanvasSize == "1920x1080" ? "selected" : "")>1920 x 1080</option>
+                                                <option value="2480x3508" @(vc.CanvasSize == "2480x3508" ? "selected" : "")>2480 x 3508 (A4)</option>
+                                                <option value="3508x2480" @(vc.CanvasSize == "3508x2480" ? "selected" : "")>3508 x 2480 (A4 Landscape)</option>
+                                                <option value="4000x4000" @(vc.CanvasSize == "4000x4000" ? "selected" : "")>4000 x 4000</option>
+                                                <option value="Other" @(new[]{"1080x1080","1920x1080","2480x3508","3508x2480","4000x4000"}.Contains(vc.CanvasSize) ? "" : "selected")>Other</option>
+                                            </select>
+                                        }
+                                        else
+                                        {
+                                            <input type="text" class="box" value="@vc.CanvasSize" disabled>
+                                        }
+                                    </div>
+                                    @if (Model.IsEditing)
+                                    {
+                                        var isCustom = !new[]{"1080x1080","1920x1080","2480x3508","3508x2480","4000x4000"}.Contains(vc.CanvasSize);
+                                        <div class="input" id="editCustomCanvas" style="display: @(isCustom ? "flex" : "none");">
+                                            <p>Custom Canvas Size</p>
+                                            <input type="text" class="box" name="CustomCanvasSize" value="@(isCustom ? vc.CanvasSize : "")">
+                                        </div>
+                                    }
+                                    <div class="input">
+                                        <p>Other Notes</p>
+                                        <textarea class="box" name="OtherNotes" rows="4" style="resize: vertical; min-height: 80px;" @disabled>@vc.OtherNotes</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mop">
+                                <h1>Mode of Payment</h1>
+                                <div class="inputs">
+                                    <div class="input">
+                                        <p>Payment Method</p>
+                                        <select name="ModeOfPayment" @disabled>
+                                            <option value="GCash" @(vc.ModeOfPayment == "GCash" ? "selected" : "")>GCash</option>
+                                            <option value="PayMaya" @(vc.ModeOfPayment == "PayMaya" ? "selected" : "")>PayMaya</option>
+                                            <option value="Game Credits" @(vc.ModeOfPayment == "Game Credits" ? "selected" : "")>Game Credits</option>
+                                        </select>
+                                    </div>
+                                    <div class="input">
+                                        <p>Estimated Budget</p>
+                                        <input type="text" class="box" name="EstimatedBudget" value="@vc.EstimatedBudget" @disabled>
+                                    </div>
+                                </div>
+                            </div>
+                            @if (Model.IsEditing)
+                            {
+                                <button type="submit" class="submit" style="margin-top:20px; margin-left:25px;">Save Changes</button>
+                            }
+                        </div>
+                    </form>
+                }
 
+                @* === NEW COMMISSION FORM === *@
                 <form method="post" enctype="multipart/form-data" id="formContent" style="display: none;">
                     <div class="form">
                         <div class="fhead">
@@ -258,22 +473,51 @@
     </div>
 
 <script>
-    // Toggle form visibility
+    // Toggle new form visibility (hides viewing commission when + is clicked)
     document.getElementById('toggleFormBtn').addEventListener('click', () => {
         const form = document.getElementById('formContent');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        const viewForm = document.getElementById('viewForm');
+        // Hide edit button
+        const editBtn = document.querySelector('.divh a[href*="edit=true"]');
+        if (editBtn) editBtn.style.display = 'none';
+        if (viewForm) viewForm.style.display = 'none';
+        if (form.style.display === 'none') {
+            form.style.display = 'block';
+            // Clear the chat when opening new form
+            const chatArea = document.getElementById('chatArea');
+            if (chatArea) chatArea.innerHTML = '';
+            const chatInput = document.querySelector('.chat-input-area');
+            if (chatInput) chatInput.style.display = 'none';
+        } else {
+            form.style.display = 'none';
+        }
     });
 
     // Contact number: only accept numeric input
-    document.getElementById('contactNumber').addEventListener('input', function(e) {
-        this.value = this.value.replace(/[^0-9]/g, '');
-    });
+    const contactNum = document.getElementById('contactNumber');
+    if (contactNum) {
+        contactNum.addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    }
 
-    // Canvas size: show custom input when "Other" is selected
-    document.getElementById('canvasSizeSelect').addEventListener('change', function() {
-        const customInput = document.getElementById('customCanvasInput');
-        customInput.style.display = this.value === 'Other' ? 'flex' : 'none';
-    });
+    // Canvas size: show custom input when "Other" is selected (new form)
+    const canvasSelect = document.getElementById('canvasSizeSelect');
+    if (canvasSelect) {
+        canvasSelect.addEventListener('change', function() {
+            const customInput = document.getElementById('customCanvasInput');
+            customInput.style.display = this.value === 'Other' ? 'flex' : 'none';
+        });
+    }
+
+    // Canvas size for edit form
+    const editCanvasSelect = document.getElementById('editCanvasSize');
+    if (editCanvasSelect) {
+        editCanvasSelect.addEventListener('change', function() {
+            const customInput = document.getElementById('editCustomCanvas');
+            if (customInput) customInput.style.display = this.value === 'Other' ? 'flex' : 'none';
+        });
+    }
 
     // File input: show filename in label when file is selected
     document.querySelectorAll('.file').forEach(input => {
@@ -282,7 +526,6 @@
             const placeholder = label.querySelector('.placeholder');
             if (this.files.length > 0) {
                 placeholder.textContent = this.files[0].name;
-                // Show remove button
                 let removeBtn = this.parentElement.querySelector('.remove-file');
                 if (!removeBtn) {
                     removeBtn = document.createElement('button');
@@ -305,7 +548,6 @@
 
     // Make labels clickable to trigger file inputs
     document.querySelectorAll('label.text').forEach(label => {
-        // Store original placeholder text
         const placeholder = label.querySelector('.placeholder');
         if (placeholder) label.dataset.original = placeholder.textContent;
         label.style.cursor = 'pointer';
@@ -316,6 +558,10 @@
             }
         });
     });
+
+    // Auto-scroll chat to bottom
+    const chatArea = document.getElementById('chatArea');
+    if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
 </script>
 
 </body>
