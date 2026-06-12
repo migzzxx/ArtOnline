@@ -21,6 +21,10 @@ body {
     font-family: 'Inter', sans-serif;
     background: linear-gradient(180deg, #FFFFFF 75%, #9FA5C7 87.5%, #3E4A8E 100%);
     background-attachment: fixed;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
 }
 
 .header {
@@ -81,21 +85,83 @@ body {
         }
         
         .gallery {
-            background-color: #90cfff;
+            background-color: #3E4A8E;
+            color: white;
         }
     }
 }
 
+.search {
+    width: 100%;
+    height: 35px;
+    display: flex;
+    gap: 12px;
+    padding: 0 25px;
+
+    .bar{
+        background-color: white;
+        border: solid 2px #1b1b1b;
+        height: 100%;
+        display: flex;
+        width: 500px;
+        border-radius: 100px;
+        overflow: hidden;
+        justify-content: center;
+        align-items: center;
+        padding-right: 15px;
+
+        input {
+            height: 100%;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            font-size: .8rem;
+            font-weight: 500;
+            padding: 0 20px;
+            outline: none;
+            border: none;
+        }
+
+        span {
+            font-size: 1.25rem;
+            margin-bottom: 3px;
+        }
+    }
+
+    .filter, .add{
+        background-color: white;
+        border: solid 2px #1b1b1b;
+        height: 100%;
+        width: 35px;
+        border-radius: 100px;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1.25rem;
+    }
+        
+}
+
+.wrap {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    padding: 25px 25px 0 25px;
+    gap: 25px;
+    overflow: hidden;
+}
+
 .gallery-frame {
+    width: 100%;
+    height: 100%;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-auto-rows: minmax(150px, auto); 
     grid-auto-flow: dense;
     gap: 20px;
-    padding: 48px;
-    padding-bottom: 100px;
-    max-width: 1440px;
-    margin: auto;
+    overflow-y: auto;
+    scrollbar-width: none;
+    padding-bottom: 25px;
 }
 
 .card {
@@ -174,9 +240,6 @@ body {
     align-items: center;
     padding: 0 20px;
     opacity: 0.8;
-    position: fixed;
-    bottom: 0;
-    left: 0;
 
     p {
         color: #1b1b1b;
