@@ -1,0 +1,197 @@
+@page
+@model ArtOnline.Pages.ReviewsModel
+@removeTagHelper "Microsoft.AspNetCore.Mvc.TagHelpers.OptionTagHelper, Microsoft.AspNetCore.Mvc.TagHelpers"
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,1,0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings:Reviews</title>
+    <link rel="stylesheet" href="~/css/reviews.css">
+</head>
+
+<body>
+    <img src="~/assets/LOGO 2 ALT.png" class="bgpic">
+
+    <div class="header">
+        <div class="left">
+            <img src="~/assets/LOGO 2.png" alt="LOGO-2" border="0">
+            <h1>ArtOnline</h1>
+        </div>
+        <div class="right">
+            <a class="home" href="/Home">Home</a>
+            <a class="gallery">Gallery</a>
+            <a class="comm" href="/Commission">Commission</a>
+            <a class="artist" href="/Artist">Artist</a>
+            <a class="set" href="/Settings">Settings</a>
+        </div>
+    </div>
+
+    <div class="mid">
+        
+        <div class="ml">
+            <div class="tabui">
+                
+                <div class="tabid">
+                    <h1>Reviews</h1>
+                    <div class="artist-rating" style="display:flex; align-items:flex-end; gap:5px;">
+                        <span class="artist-ave" style="font-family:'Geom'; font-size:1.3rem; font-weight:500; color:black;">Artist Ave. Rating: @Model.AverageRating.ToString("0.0")</span>
+                        <span class="material-symbols-rounded" style="font-size:22px; color:#ffe043;">star</span>
+                    </div>
+                </div>
+
+                <div class="reviews" id="reviewsArea">
+                    <div style="flex:1;"></div>
+                    @foreach (var review in Model.AllReviews)
+                    {
+                        var timeDiff = DateTime.Now - review.SentAt;
+                        var timeDisplay = timeDiff.TotalHours < 24 ? review.SentAt.ToString("h:mm tt") : review.SentAt.ToString("dd/MM/yyyy");
+                        <div class="chat">
+                            <span class="user">@@@review.Username</span>
+                            <div class="chat-bubble">
+                                <p>@review.Message</p>
+                            </div>
+                            <div class="chat-info">
+                                <span class="time">@timeDisplay</span>
+                                <span class="dot">•</span>
+                                <span class="rating">@review.Rating</span>
+                                <span class="material-symbols-rounded star-small">star</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (Model.CanReview)
+                {
+                    <form method="post" asp-page-handler="SendReview" class="review-bar">
+                        <div class="input-group">
+                            <label>Write your review:</label>
+                            <input type="text" name="ReviewMessage" placeholder="Type here..." class="review-input" required>
+                        </div>
+
+                        <div class="input-group">
+                            <label>Select completed commission:</label>
+                            <div class="select-wrapper">
+                                <select name="CommissionId" class="commission-select" required>
+                                    <option value="" disabled selected hidden></option>
+                                    @foreach (var c in Model.CompletedCommissions)
+                                    {
+                                        <option value="@c.Id">@c.Subject</option>
+                                    }
+                                </select>
+                                <span class="material-symbols-rounded dd-icon">arrow_drop_down</span>
+                            </div>
+                        </div>
+
+                        <div class="rating-group">
+                            <label>Rating:</label>
+                            <div class="rating-wrap">
+                                <select name="Rating" required>
+                                    <option value="0">0</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5" selected>5</option>
+                                </select>
+                                <span class="material-symbols-rounded star-icon">star</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="send">
+                            <span class="material-symbols-rounded">send</span>
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <div class="review-bar">
+                        <div class="input-group">
+                            <label>Write your review:</label>
+                            <input type="text" placeholder="Complete a commission to leave a review" class="review-input" disabled>
+                        </div>
+                        <div class="input-group">
+                            <label>Select completed commission:</label>
+                            <div class="select-wrapper">
+                                <select class="commission-select" disabled>
+                                    <option value="" disabled selected hidden>No completed commissions</option>
+                                </select>
+                                <span class="material-symbols-rounded dd-icon">arrow_drop_down</span>
+                            </div>
+                        </div>
+                        <div class="rating-group">
+                            <label>Rating:</label>
+                            <div class="rating-wrap">
+                                <select disabled>
+                                    <option>-</option>
+                                </select>
+                                <span class="material-symbols-rounded star-icon">star</span>
+                            </div>
+                        </div>
+                        <button class="send" disabled>
+                            <span class="material-symbols-rounded">send</span>
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="mr">
+            <div class="setui">
+                <div class="iconwrap">
+                    <span class="material-symbols-rounded">settings</span>
+                </div>
+                <div class="divwrap">
+                    <a href="/Settings"><div class="set1">
+                        <span class="material-symbols-rounded">arrow_back_ios</span>
+                        <p>Account</p>
+                    </div></a>
+                    <a href="/Faqs"><div class="set2">
+                        <span class="material-symbols-rounded">arrow_back_ios</span>
+                        <p>FAQs</p>
+                    </div></a>
+                    <a href="/Reviews"><div class="set3">
+                        <span class="material-symbols-rounded">arrow_back_ios</span>
+                        <p>Reviews</p>
+                    </div></a>
+                    <a href="/Terms"><div class="set4">
+                        <span class="material-symbols-rounded">arrow_back_ios</span>
+                        <p>Terms</p>
+                    </div></a>
+                    <a href="/Privacy"><div class="set5">
+                        <span class="material-symbols-rounded">arrow_back_ios</span>
+                        <p>Privacy Policy</p>
+                    </div></a>
+                </div>
+                <img src="~/assets/MAIN LOGO.png" alt="MAIN-LOGO" border="0">
+                <div class="iconwrap">
+                    <a href="/Logout"><span class="exit material-symbols-rounded">exit_to_app</span></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; Art Online, 2026. All rights reserved.</p>
+        <div class="cont">
+            <p>Connect w/ Developers:</p>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+            </svg>
+            <a href="">developers&#64;gmail.com</a>
+        </div>
+    </div>
+
+<script>
+    // Auto-scroll reviews to bottom
+    const reviewsArea = document.getElementById('reviewsArea');
+    if (reviewsArea) reviewsArea.scrollTop = reviewsArea.scrollHeight;
+</script>
+    
+</body>
+
+</html>

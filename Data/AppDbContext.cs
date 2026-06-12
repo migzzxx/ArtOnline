@@ -10,4 +10,5 @@ public class AppDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Commission> Commissions { get; set; }
     public DbSet<ChatMessage> ChatMessages { get; set; }
+    public DbSet<Review> Reviews { get; set; }
 }

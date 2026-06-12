@@ -32,12 +32,13 @@
 
     <div class="mid">
         <div class="ml">
-            <div class="tabui">
+            <div class="tabui" style="overflow:hidden; padding-bottom:0;">
                 <div class="tabid">
                     <h1>Profile</h1>
                     <span class="material-symbols-rounded">edit_square</span>
                 </div>
 
+                <div style="overflow-y:auto; flex:1; height:0; padding-top:20px; padding-bottom:25px;">
                 @if (!string.IsNullOrEmpty(Model.SuccessMessage))
                 {
                     <p class="success-message">@Model.SuccessMessage</p>
@@ -95,6 +96,7 @@
                         </div>
                     </div>
                 </form>
+                </div>
             </div>
         </div>
         <div class="mr">
@@ -111,10 +113,10 @@
                         <span class="material-symbols-rounded">arrow_back_ios</span>
                         <p>FAQs</p>
                     </div></a>
-                    <div class="set3">
+                    <a href="/Reviews"><div class="set3">
                         <span class="material-symbols-rounded">arrow_back_ios</span>
                         <p>Reviews</p>
-                    </div>
+                    </div></a>
                     <a href="/Terms"><div class="set4">
                         <span class="material-symbols-rounded">arrow_back_ios</span>
                         <p>Terms</p>

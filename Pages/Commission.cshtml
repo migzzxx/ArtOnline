@@ -35,13 +35,13 @@
                 <div class="divh">
                     <h1>Commissions</h1>
                     <div class="wrap">
-                        <span class="material-symbols-rounded" style="font-weight: lighter;">donut_large</span>
-                        <span class="material-symbols-rounded" style="font-weight: bold;">check</span>
+                        <span class="material-symbols-rounded" id="filterProgress" style="font-weight: lighter; cursor:pointer;">donut_large</span>
+                        <span class="material-symbols-rounded" id="filterCheck" style="font-weight: bold; cursor:pointer;">check</span>
                     </div>
                 </div>
                 @foreach (var c in Model.Commissions)
                 {
-                    <div class="queue" style="cursor: pointer;" onclick="window.location.href='/Commission?commissionId=@c.Id'">
+                    <div class="queue" data-status="@c.Status" style="cursor: pointer;" onclick="window.location.href='/Commission?commissionId=@c.Id'">
                         <div class="pleft" style="background-color: @(c.Status == "Pending" ? "#ec7c7c" : c.Status == "Working" ? "#ecb07c" : "#7cec7c")"></div>
                         <div class="pending">
                             <div class="pmid">
@@ -473,6 +473,62 @@
     </div>
 
 <script>
+    // Commission filter icons
+    const filterProgress = document.getElementById('filterProgress');
+    const filterCheck = document.getElementById('filterCheck');
+    let progressState = 0; // 0=default(all pending+working), 1=pending only(red), 2=working only(orange)
+    let checkState = 0; // 0=default(hidden completed), 1=show completed only(green)
+
+    function applyFilter() {
+        const queues = document.querySelectorAll('.queue[data-status]');
+        queues.forEach(q => {
+            const status = q.dataset.status;
+            if (checkState === 1) {
+                // Check is active: only show completed
+                q.style.display = status === 'Completed' ? 'flex' : 'none';
+            } else {
+                // Progress filter active
+                if (progressState === 0) {
+                    // Default: show pending + working
+                    q.style.display = (status === 'Pending' || status === 'Working') ? 'flex' : 'none';
+                } else if (progressState === 1) {
+                    // Red: pending only
+                    q.style.display = status === 'Pending' ? 'flex' : 'none';
+                } else if (progressState === 2) {
+                    // Orange: working only
+                    q.style.display = status === 'Working' ? 'flex' : 'none';
+                }
+            }
+        });
+    }
+
+    filterProgress.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Reset check filter
+        checkState = 0;
+        filterCheck.style.color = '';
+        // Cycle progress: default -> red(pending) -> orange(working) -> default
+        progressState = (progressState + 1) % 3;
+        if (progressState === 0) filterProgress.style.color = '';
+        else if (progressState === 1) filterProgress.style.color = '#9e3e3e';
+        else if (progressState === 2) filterProgress.style.color = '#d4890a';
+        applyFilter();
+    });
+
+    filterCheck.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Reset progress filter
+        progressState = 0;
+        filterProgress.style.color = '';
+        // Toggle check: default -> green(completed) -> default
+        checkState = checkState === 0 ? 1 : 0;
+        filterCheck.style.color = checkState === 1 ? '#3e9e3e' : '';
+        applyFilter();
+    });
+
+    // Apply default filter on page load (hide completed)
+    applyFilter();
+
     // Toggle new form visibility (hides viewing commission when + is clicked)
     document.getElementById('toggleFormBtn').addEventListener('click', () => {
         const form = document.getElementById('formContent');
