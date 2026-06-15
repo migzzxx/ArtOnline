@@ -291,7 +291,8 @@ public class CommissionModel : PageModel
             EstimatedBudget = EstimatedBudget,
             Status = "Pending",
             DateSubmitted = now,
-            TimeSubmitted = now.ToString("h:mm tt")
+            TimeSubmitted = now.ToString("h:mm tt"),
+            FormTemplateVersion = _db.FormTemplates.Where(t => t.IsCurrent).Select(t => t.Version).FirstOrDefault()
         };
 
         _db.Commissions.Add(commission);

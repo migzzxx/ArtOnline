@@ -1,0 +1,371 @@
+@page
+@model ArtOnline.Pages.ArtistFormModel
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,1,0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Template</title>
+    <link rel="stylesheet" href="~/css/form_AUI.css">
+</head>
+
+<body>
+    <div class="header">
+        <div class="left">
+            <img src="~/assets/LOGO 2.png" alt="LOGO-2" border="0">
+            <h1>ArtOnline</h1>
+        </div>
+        <div class="right">
+            <a class="dash" href="/ArtistDashboard">Dashboard</a>
+            <a class="comm" href="/ArtistCommission">Commission</a>
+            <a class="form" href="/ArtistForm">Form</a>
+            <a class="gallery">Gallery</a>
+        </div>
+    </div>
+
+    <div class="mid">
+        <div class="left">
+            <div class="top">
+                <h1>Form Template</h1>
+                <div id="headerIcons">
+                    <span class="material-symbols-rounded" id="editBtn" style="cursor:pointer;">edit</span>
+                </div>
+                <div id="editModeIcons" style="display:none; gap:10px;">
+                    <span class="material-symbols-rounded" id="discardBtn" style="cursor:pointer; color:#ff5555;">close</span>
+                    <span class="material-symbols-rounded" id="saveBtn" style="cursor:pointer; color:#4ed74e;">check</span>
+                </div>
+            </div>
+            <div class="bot">
+                <div class="form-preview" id="formPreview">
+                    <!-- Rendered by JavaScript -->
+                </div>
+            </div>
+        </div>
+        <div class="right">
+            <div class="top">
+                <h1>Components</h1>
+            </div>
+            <div class="bot" id="componentsPanel" style="display:none;">
+                <button class="component-btn" onclick="addComponent('subheader')">+ Add Sub Header</button>
+                <button class="component-btn" onclick="addComponent('text')">+ Add Text Field</button>
+                <button class="component-btn" onclick="addComponent('file')">+ Add File Upload</button>
+                <button class="component-btn" onclick="addComponent('dropdown')">+ Add Dropdown</button>
+                <button class="component-btn" onclick="addComponent('textarea')">+ Add Text Area</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; Art Online, 2026. All rights reserved.</p>
+        <div class="cont">
+            <p>Connect w/ Developers:</p>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+            </svg>
+            <a href="">developers&#64;gmail.com</a>
+        </div>
+    </div>
+
+    <form method="post" asp-page-handler="Save" id="saveForm" style="display:none;">
+        <input type="hidden" name="fieldsData" id="fieldsDataInput" />
+    </form>
+
+<!-- Custom Modal -->
+<div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; display:none; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:12px; padding:25px 30px; min-width:350px; max-width:450px; box-shadow:0 10px 40px rgba(0,0,0,0.3); font-family:'Inter',sans-serif;">
+        <p id="modalLabel" style="font-size:0.9rem; font-weight:600; color:#1b1b1b; margin-bottom:10px;"></p>
+        <input id="modalInput" type="text" style="width:100%; padding:10px 14px; font-size:1rem; border:2px solid #3E4A8E; border-radius:8px; outline:none; font-family:'Inter',sans-serif;" />
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+            <button id="modalCancel" type="button" style="padding:8px 20px; border:2px solid #1b1b1b; background:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">Cancel</button>
+            <button id="modalOk" type="button" style="padding:8px 20px; border:none; background:#3E4A8E; color:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Field Status Modal -->
+<div id="statusModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:12px; padding:25px 30px; min-width:350px; max-width:400px; box-shadow:0 10px 40px rgba(0,0,0,0.3); font-family:'Inter',sans-serif;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <p style="font-size:0.95rem; font-weight:600; color:#1b1b1b;">Field Status: <span id="statusText" style="font-weight:700;">Required</span></p>
+            <button id="statusToggle" type="button" style="background:none; border:none; cursor:pointer; display:flex; align-items:center;">
+                <span class="material-symbols-rounded" style="font-size:1.5rem; color:#3E4A8E;">edit</span>
+            </button>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button id="statusCancel" type="button" style="padding:8px 20px; border:2px solid #1b1b1b; background:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">Cancel</button>
+            <button id="statusSave" type="button" style="padding:8px 20px; border:none; background:#3E4A8E; color:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">Save</button>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    // Custom modal prompt function
+    function modalPrompt(label, defaultValue) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('customModal');
+            const input = document.getElementById('modalInput');
+            const labelEl = document.getElementById('modalLabel');
+            labelEl.textContent = label;
+            input.value = defaultValue || '';
+            modal.style.display = 'flex';
+            input.focus();
+            input.select();
+            document.getElementById('modalOk').onclick = () => { modal.style.display = 'none'; resolve(input.value); };
+            document.getElementById('modalCancel').onclick = () => { modal.style.display = 'none'; resolve(null); };
+            input.onkeydown = (e) => { if (e.key === 'Enter') { modal.style.display = 'none'; resolve(input.value); } if (e.key === 'Escape') { modal.style.display = 'none'; resolve(null); } };
+        });
+    }
+
+
+    // Custom confirm function (replaces browser confirm)
+    function modalConfirm(message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('customModal');
+            const input = document.getElementById('modalInput');
+            const labelEl = document.getElementById('modalLabel');
+            labelEl.textContent = message;
+            input.style.display = 'none';
+            modal.style.display = 'flex';
+            document.getElementById('modalOk').onclick = () => { modal.style.display = 'none'; input.style.display = ''; resolve(true); };
+            document.getElementById('modalCancel').onclick = () => { modal.style.display = 'none'; input.style.display = ''; resolve(false); };
+        });
+    }
+
+    // Field status editor modal
+    function showFieldStatusModal(currentRequired) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('statusModal');
+            const statusText = document.getElementById('statusText');
+            const toggleBtn = document.getElementById('statusToggle');
+            let isRequired = currentRequired;
+            
+            function updateDisplay() {
+                statusText.textContent = isRequired ? 'Required' : 'Optional';
+                statusText.style.color = isRequired ? '#9e3e3e' : '#3e9e3e';
+            }
+            updateDisplay();
+            
+            toggleBtn.onclick = () => { isRequired = !isRequired; updateDisplay(); };
+            modal.style.display = 'flex';
+            document.getElementById('statusSave').onclick = () => { modal.style.display = 'none'; resolve(isRequired); };
+            document.getElementById('statusCancel').onclick = () => { modal.style.display = 'none'; resolve(null); };
+        });
+    }
+
+    // Load template data
+    let fields = @Html.Raw(Model.FieldsJson);
+    let originalFields = JSON.parse(JSON.stringify(fields));
+    let isEditing = false;
+
+    const formPreview = document.getElementById('formPreview');
+    const editBtn = document.getElementById('editBtn');
+    const headerIcons = document.getElementById('headerIcons');
+    const editModeIcons = document.getElementById('editModeIcons');
+    const discardBtn = document.getElementById('discardBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const componentsPanel = document.getElementById('componentsPanel');
+
+    function renderForm() {
+        formPreview.innerHTML = '';
+        fields.forEach((field, index) => {
+            const div = document.createElement('div');
+            
+            if (field.type === 'mainheader') {
+                div.className = 'fhead';
+                div.innerHTML = `
+                    <h1 class="main-title" data-index="${index}">${field.title}</h1>
+                    <p class="main-desc" data-index="${index}">${field.description}</p>
+                `;
+                if (isEditing) {
+                    div.style.cursor = 'pointer';
+                    div.style.border = '1px dashed #3E4A8E';
+                    div.style.padding = '10px';
+                    div.style.borderRadius = '6px';
+                    div.onclick = () => editMainHeader(index);
+                }
+            } else if (field.type === 'subheader') {
+                div.className = 'field-item' + (isEditing ? ' editing' : '');
+                div.innerHTML = `
+                    <div class="field-subheader">${field.label}</div>
+                    <div class="field-actions">
+                        <button class="edit-btn" onclick="editField(${index})">&#9998;</button>
+                        <button class="delete-btn" onclick="deleteField(${index})">&#10005;</button>
+                    </div>
+                `;
+            } else if (field.type === 'text') {
+                div.className = 'field-item' + (isEditing ? ' editing' : '');
+                div.innerHTML = `
+                    <p class="field-label">${field.label}${field.required ? ' <span style="color:red;">*</span>' : ''}</p>
+                    <input class="field-input" type="text" placeholder="${field.placeholder || ''}" disabled>
+                    <div class="field-actions">
+                        <button class="edit-btn" onclick="editField(${index})">&#9998;</button>
+                        <button class="delete-btn" onclick="deleteField(${index})">&#10005;</button>
+                    </div>
+                `;
+            } else if (field.type === 'file') {
+                div.className = 'field-item' + (isEditing ? ' editing' : '');
+                div.innerHTML = `
+                    <p class="field-label">${field.label}${field.required ? ' <span style="color:red;">*</span>' : ''}</p>
+                    <div style="border:2px solid #1b1b1b; border-radius:8px; padding:12px; text-align:center; color:#888;">File Upload</div>
+                    <div class="field-actions">
+                        <button class="edit-btn" onclick="editField(${index})">&#9998;</button>
+                        <button class="delete-btn" onclick="deleteField(${index})">&#10005;</button>
+                    </div>
+                `;
+            } else if (field.type === 'dropdown') {
+                div.className = 'field-item' + (isEditing ? ' editing' : '');
+                const optionsHtml = (field.options || []).map(o => `<option>${o}</option>`).join('');
+                div.innerHTML = `
+                    <p class="field-label">${field.label}${field.required ? ' <span style="color:red;">*</span>' : ''}</p>
+                    <select class="field-input" disabled><option value="">-- Select --</option>${optionsHtml}</select>
+                    <div class="field-actions">
+                        <button class="edit-btn" onclick="editField(${index})">&#9998;</button>
+                        <button class="delete-btn" onclick="deleteField(${index})">&#10005;</button>
+                    </div>
+                `;
+            } else if (field.type === 'textarea') {
+                div.className = 'field-item' + (isEditing ? ' editing' : '');
+                div.innerHTML = `
+                    <p class="field-label">${field.label}${field.required ? ' <span style="color:red;">*</span>' : ''}</p>
+                    <textarea class="field-input" style="height:60px; resize:none;" placeholder="${field.placeholder || ''}" disabled></textarea>
+                    <div class="field-actions">
+                        <button class="edit-btn" onclick="editField(${index})">&#9998;</button>
+                        <button class="delete-btn" onclick="deleteField(${index})">&#10005;</button>
+                    </div>
+                `;
+            }
+            
+            formPreview.appendChild(div);
+        });
+    }
+
+    function enterEditMode() {
+        isEditing = true;
+        headerIcons.style.display = 'none';
+        editModeIcons.style.display = 'flex';
+        componentsPanel.style.display = 'block';
+        renderForm();
+    }
+
+    function exitEditMode() {
+        isEditing = false;
+        headerIcons.style.display = 'block';
+        editModeIcons.style.display = 'none';
+        componentsPanel.style.display = 'none';
+        renderForm();
+    }
+
+    editBtn.addEventListener('click', enterEditMode);
+
+    discardBtn.addEventListener('click', () => {
+        fields = JSON.parse(JSON.stringify(originalFields));
+        exitEditMode();
+    });
+
+    saveBtn.addEventListener('click', () => {
+        document.getElementById('fieldsDataInput').value = JSON.stringify(fields);
+        document.getElementById('saveForm').submit();
+    });
+
+    async function editMainHeader(index) {
+        const field = fields[index];
+        const newTitle = await modalPrompt('Edit title:', field.title);
+        if (newTitle !== null) field.title = newTitle;
+        const newDesc = await modalPrompt('Edit description:', field.description);
+        if (newDesc !== null) field.description = newDesc;
+        renderForm();
+    }
+
+    async function editField(index) {
+        const field = fields[index];
+        const newLabel = await modalPrompt('Edit label:', field.label);
+        if (newLabel !== null) field.label = newLabel;
+        
+        if (field.type === 'text' || field.type === 'textarea') {
+            const newPlaceholder = await modalPrompt('Edit placeholder:', field.placeholder || '');
+            if (newPlaceholder !== null) field.placeholder = newPlaceholder;
+            const isRequired = await showFieldStatusModal(field.required);
+            if (isRequired !== null) field.required = isRequired;
+        } else if (field.type === 'dropdown') {
+            const currentOptions = (field.options || []).join(', ');
+            const newOptions = await modalPrompt('Edit options (comma-separated):', currentOptions);
+            if (newOptions !== null) {
+                field.options = newOptions.split(',').map(o => o.trim()).filter(o => o.length > 0);
+            }
+            const isRequired = await showFieldStatusModal(field.required);
+            if (isRequired !== null) field.required = isRequired;
+        } else if (field.type === 'file') {
+            const isRequired = await showFieldStatusModal(field.required);
+            if (isRequired !== null) field.required = isRequired;
+        }
+        renderForm();
+    }
+
+    async function deleteField(index) {
+        if (fields[index].type === 'mainheader') {
+            alert('Cannot delete the main header.');
+            return;
+        }
+        if (await modalConfirm('Delete this field?')) {
+            fields.splice(index, 1);
+            renderForm();
+        }
+    }
+
+    async function addComponent(type) {
+        const id = 'f' + Date.now();
+        let newField = { id: id, type: type, required: false };
+        
+        if (type === 'subheader') {
+            const label = await modalPrompt('Sub header name:', '');
+            if (!label) return;
+            newField.label = label;
+        } else if (type === 'text') {
+            const label = await modalPrompt('Field label:', '');
+            if (!label) return;
+            newField.label = label;
+            newField.placeholder = (await modalPrompt('Placeholder text:', '')) || '';
+            const reqResult = await showFieldStatusModal(false);
+            if (reqResult !== null) newField.required = reqResult;
+        } else if (type === 'file') {
+            const label = await modalPrompt('File upload label:', '');
+            if (!label) return;
+            newField.label = label;
+            const reqResult = await showFieldStatusModal(false);
+            if (reqResult !== null) newField.required = reqResult;
+        } else if (type === 'dropdown') {
+            const label = await modalPrompt('Dropdown label:', '');
+            if (!label) return;
+            newField.label = label;
+            const options = await modalPrompt('Options (comma-separated):', '');
+            if (!options) return;
+            newField.options = options.split(',').map(o => o.trim()).filter(o => o.length > 0);
+            const reqResult = await showFieldStatusModal(false);
+            if (reqResult !== null) newField.required = reqResult;
+        } else if (type === 'textarea') {
+            const label = await modalPrompt('Textarea label:', '');
+            if (!label) return;
+            newField.label = label;
+            newField.placeholder = (await modalPrompt('Placeholder text:', '')) || '';
+            const reqResult = await showFieldStatusModal(false);
+            if (reqResult !== null) newField.required = reqResult;
+        }
+        
+        fields.push(newField);
+        renderForm();
+        // Scroll to bottom
+        const bot = formPreview.parentElement;
+        bot.scrollTop = bot.scrollHeight;
+    }
+
+    // Initial render
+    renderForm();
+</script>
+
+</body>
+</html>

@@ -24,6 +24,7 @@ public class Commission
     public string Status { get; set; } = "Pending";
     public DateTime DateSubmitted { get; set; }
     public string TimeSubmitted { get; set; } = "";
+    public int? FormTemplateVersion { get; set; }
 
     public User? User { get; set; }
 }

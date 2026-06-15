@@ -12,4 +12,5 @@ public class AppDbContext : DbContext
     public DbSet<ChatMessage> ChatMessages { get; set; }
     public DbSet<Review> Reviews { get; set; }
     public DbSet<CommissionStatus> CommissionStatuses { get; set; }
+    public DbSet<FormTemplate> FormTemplates { get; set; }
 }
