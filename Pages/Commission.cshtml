@@ -39,6 +39,7 @@
                         <span class="material-symbols-rounded" id="filterCheck" style="font-weight: bold; cursor:pointer;">check</span>
                     </div>
                 </div>
+                <div style="overflow-y:auto; flex:1; min-height:0;">
                 @foreach (var c in Model.Commissions)
                 {
                     <div class="queue" data-status="@c.Status" style="cursor: pointer;" onclick="window.location.href='/Commission?commissionId=@c.Id'">
@@ -70,12 +71,14 @@
                         </div>
                     </div>
                 }
+                </div>
             </div>
             <div class="bot">
                 <div class="divh">
                     <h1>Chats</h1>
                 </div>
                 <div class="chat-area" id="chatArea">
+                    <div style="flex:1;"></div>
                     @foreach (var msg in Model.ChatMessages)
                     {
                         var timeDiff = DateTime.Now - msg.SentAt;
@@ -101,7 +104,14 @@
         <div class="midr">
             <div class="divh">
                 <h1>Fill Out Form</h1>
-                <p>(Commission Status: OPEN)</p>
+                @if (Model.IsCommissionOpen)
+                {
+                    <p>(Commission Status: <span style="color:green;">OPEN</span>)</p>
+                }
+                else
+                {
+                    <p>(Commission Status: <span style="color:#9e3e3e;">CLOSED</span>)</p>
+                }
                 <div style="display:flex; align-items:center; position:absolute; right:15px; gap:15px;">
                     @if (Model.ViewingCommission != null && Model.ViewingCommission.Status == "Pending")
                     {
@@ -118,7 +128,7 @@
                             </a>
                         }
                     }
-                    <button type="button" id="toggleFormBtn" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; position:static;">
+                    <button type="button" id="toggleFormBtn" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; position:static; @(Model.IsCommissionOpen ? "" : "display:none;")">
                         <span class="material-symbols-rounded">add_2</span>
                     </button>
                 </div>

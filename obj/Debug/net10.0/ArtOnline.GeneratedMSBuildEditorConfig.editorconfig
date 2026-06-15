@@ -26,6 +26,14 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXJ0aXN0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Miguel/ArtOnline/Pages/ArtistCommission.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXJ0aXN0Q29tbWlzc2lvbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Miguel/ArtOnline/Pages/ArtistDashboard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXJ0aXN0RGFzaGJvYXJkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Miguel/ArtOnline/Pages/Commission.cshtml]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tbWlzc2lvbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 

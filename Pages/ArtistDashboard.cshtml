@@ -1,0 +1,166 @@
+@page
+@model ArtOnline.Pages.ArtistDashboardModel
+@removeTagHelper "Microsoft.AspNetCore.Mvc.TagHelpers.OptionTagHelper, Microsoft.AspNetCore.Mvc.TagHelpers"
+@using System.IO
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,1,0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="~/css/dashboard_AUI.css">
+</head>
+
+<body>
+    <div class="header">
+        <div class="left">
+            <img src="~/assets/LOGO 2.png" alt="LOGO-2" border="0">
+            <h1>ArtOnline</h1>
+        </div>
+        <div class="right">
+            <a class="dash" href="/ArtistDashboard">Dashboard</a>
+            <a class="comm" href="/ArtistCommission">Commission</a>
+            <a class="form">Form</a>
+            <a class="gallery">Gallery</a>
+        </div>
+    </div>
+
+    <div class="mid">
+
+        <div class="top">
+            <div class="title">
+                <div class="name">
+                    <h1>Dashboard</h1>
+                    <span class="material-symbols-rounded">filter_list</span>
+                </div>
+                <div class="dat">
+                    <p>@DateTime.Now.ToString("h:mm tt")</p>
+                    <p>@DateTime.Now.ToString("MMMM dd, yyyy")</p>
+                </div>
+            </div>
+            <div class="wrap">
+                <div class="rush">
+                    <h1>Rush</h1>
+                    <h1>@Model.RushCount.ToString("00")</h1>
+                </div>
+                <div class="pending">
+                    <h1>Pending</h1>
+                    <h1>@Model.PendingCount.ToString("00")</h1>
+                </div>
+                <div class="working">
+                    <h1>Working</h1>
+                    <h1>@Model.WorkingCount.ToString("00")</h1>
+                </div>
+                <div class="completed">
+                    <h1>Completed</h1>
+                    <h1>@Model.CompletedCount.ToString("00")</h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="bot">
+            <div class="left">
+                <div class="title">
+                    <h1>Reviews</h1>
+                    <div class="wrap">
+                        <p>Artist Ave. Rating: @Model.AverageRating.ToString("0.0")</p>
+                        <span class="material-symbols-rounded">star</span>
+                    </div>
+                </div>
+                <div class="inside">
+                    @foreach (var review in Model.AllReviews)
+                    {
+                        var timeDiff = DateTime.Now - review.SentAt;
+                        var timeDisplay = timeDiff.TotalHours < 24 ? review.SentAt.ToString("h:mm tt") : review.SentAt.ToString("dd/MM/yyyy");
+                        <div class="review">
+                            <p class="name">@@@review.Username</p>
+                            <p class="text">@review.Message</p>
+                            <div class="tira">
+                                <p class="time">@timeDisplay</p>
+                                <p class="dot">●</p>
+                                <div class="rate">
+                                    <p>@review.Rating</p>
+                                    <span class="material-symbols-rounded">star</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="right">
+                <div class="rt">
+                    <h1>Recent Activities</h1>
+                    <div style="overflow-y:auto; flex:1; min-height:0;">
+                        @foreach (var c in Model.RecentActivities)
+                        {
+                            <div class="queue">
+                                <div class="pleft" style="background-color: @(c.Status == "Pending" ? "#ec7c7c" : c.Status == "Working" ? "#ecb07c" : "#7cec7c")"></div>
+                                <div class="pending">
+                                    <div class="pmid">
+                                        <p class="stat" style="color: @(c.Status == "Pending" ? "#9e3e3e" : c.Status == "Working" ? "#9e7a3e" : "#3e9e3e")">[<span>@c.Status</span>]</p>
+                                        <div class="date">
+                                            <p>@c.DateSubmitted.ToString("d MMM")</p>
+                                            <p class="dot">●</p>
+                                            <p>@c.TimeSubmitted</p>
+                                        </div>
+                                    </div>
+                                    <div class="pright">
+                                        <p class="name">@c.Subject</p>
+                                        <div class="attr">
+                                            @if (c.RushCommission)
+                                            {
+                                                <p class="a1" style="font-weight:bold;">Rush</p>
+                                                <p class="dot">●</p>
+                                            }
+                                            <p class="a2">@c.CommissionType1</p>
+                                            <p class="dot">●</p>
+                                            <p class="a3">@c.CommissionType2</p>
+                                            <p class="dot">●</p>
+                                            <p class="a4">@c.CommissionType3</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div style="width:90%; padding-right:50px; padding:12px 0; padding-right:50px; background-color:white; box-shadow:0px 0px 12px rgba(0,0,0,0.350);">
+                    <div style="background-color:#3E4A8E; color:white; font-family:'Geom',sans-serif; display:flex; align-items:center; justify-content:space-between; padding:10px 24px;">
+                        <h1 style="font-weight:600; font-size:2rem; color:white; white-space:nowrap;">Commission Status:</h1>
+                        @if (Model.IsCommissionOpen)
+                        {
+                            <h1 style="font-size:2rem; font-weight:700; padding-left:10px; flex:1; color:rgb(78, 215, 78);">OPEN</h1>
+                        }
+                        else
+                        {
+                            <h1 style="font-size:2rem; font-weight:700; padding-left:10px; flex:1; color:#9e3e3e;">CLOSED</h1>
+                        }
+                        <form method="post" asp-page-handler="ToggleStatus" style="display:contents;">
+                            <button type="submit" style="background:none; border:none; cursor:pointer; padding:0; display:flex; align-items:center;">
+                                <span class="material-symbols-rounded" style="font-size:2rem; color:@(Model.IsCommissionOpen ? "#4ed74e" : "#ff5555");">edit</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>&copy; Art Online, 2026. All rights reserved.</p>
+        <div class="cont">
+            <p>Connect w/ Developers:</p>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+            </svg>
+            <a href="">developers&#64;gmail.com</a>
+        </div>
+    </div>
+</body>
+
+</html>

@@ -25,6 +25,7 @@ public class CommissionModel : PageModel
     public Commission? ViewingCommission { get; set; }
     public bool IsEditing { get; set; }
     public bool ShowSuccess { get; set; }
+    public bool IsCommissionOpen { get; set; } = true;
 
     [BindProperty] public string Email { get; set; } = "";
     [BindProperty] public string ContactNumber { get; set; } = "";
@@ -56,6 +57,10 @@ public class CommissionModel : PageModel
 
         if (TempData["Success"] != null)
             ShowSuccess = true;
+
+        // Check commission status (open/closed)
+        var commStatus = _db.CommissionStatuses.FirstOrDefault();
+        IsCommissionOpen = commStatus == null || commStatus.IsOpen;
 
         // Load selected commission for viewing/editing
         if (commissionId.HasValue && Commissions.Any(c => c.Id == commissionId.Value))
