@@ -38,6 +38,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXJ0aXN0Rm9ybS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Miguel/ArtOnline/Pages/ArtistGallery.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXJ0aXN0R2FsbGVyeS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Miguel/ArtOnline/Pages/Commission.cshtml]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ29tbWlzc2lvbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
@@ -48,6 +52,10 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/Miguel/ArtOnline/Pages/Faqs.cshtml]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmFxcy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Miguel/ArtOnline/Pages/Gallery.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcR2FsbGVyeS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Miguel/ArtOnline/Pages/Home.cshtml]

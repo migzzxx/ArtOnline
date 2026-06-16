@@ -1,0 +1,382 @@
+@page
+@model ArtOnline.Pages.ArtistGalleryModel
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,1,0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=favorite">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery</title>
+    <link rel="stylesheet" href="~/css/gallery_artistui.css">
+</head>
+
+<body>
+    <div class="header">
+        <div class="left">
+            <img src="~/assets/LOGO 2.png" alt="LOGO-2" border="0">
+            <h1>ArtOnline</h1>
+        </div>
+        <div class="right">
+            <a class="dash" href="/ArtistDashboard">Dashboard</a>
+            <a class="comm" href="/ArtistCommission">Commission</a>
+            <a class="form" href="/ArtistForm">Form</a>
+            <a class="gallery" href="/ArtistGallery">Gallery</a>
+        </div>
+    </div>
+
+    <div class="search">
+        <div class="bar">
+            <input type="text" id="searchInput" placeholder="Search..." value="@Model.SearchQuery">
+            <span class="material-symbols-rounded" onclick="doSearch()" style="cursor:pointer;">search</span>
+        </div>
+        <span class="material-symbols-rounded filter" id="filterBtn" style="cursor:pointer; @(Model.SelectedTag != null ? "background:#3E4A8E; color:white; border-color:#3E4A8E;" : "")">filter_list</span>
+        <span class="material-symbols-rounded add" id="addBtn" style="cursor:pointer;">add</span>
+    </div>
+
+    <!-- Tag Filter Panel -->
+    <div id="filterModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+        <div style="background:white; border-radius:12px; padding:25px 30px; width:450px; box-shadow:0 10px 40px rgba(0,0,0,0.3); font-family:'Inter',sans-serif;">
+            <p style="font-size:1rem; font-weight:600; color:#1b1b1b; margin-bottom:15px;">Filter by Tag</p>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; max-height:180px; overflow-y:auto; padding:5px 0;" id="filterTags">
+                @foreach (var tag in Model.AllTags)
+                {
+                    <span class="tag-chip @(Model.SelectedTag == tag.Name ? "active" : "")" data-tag="@tag.Name" onclick="document.querySelectorAll('#filterTags .tag-chip').forEach(t=>t.classList.remove('active')); this.classList.add('active');" style="padding:6px 14px; border:2px solid #3E4A8E; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer;">@tag.Name</span>
+                }
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button onclick="clearFilter()" style="padding:8px 20px; border:2px solid #1b1b1b; background:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">Clear</button>
+                <button onclick="applyFilter()" style="padding:8px 20px; border:none; background:#3E4A8E; color:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">Filter</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="wrap">
+        <main class="gallery-frame">
+            @foreach (var img in Model.Images)
+            {
+                <div class="card" style="background-image:url('@img.ImagePath');" onclick="viewImage(@img.Id, '@img.Title.Replace("'", "\\'")', '@img.Description.Replace("'", "\\'")', '@img.Tags', @img.HeartCount, '@img.DateAdded.ToString("MMM dd, yyyy")', '@img.ImagePath')">
+                    <div class="card-info">
+                        <strong>@img.Title</strong>
+                        <span>@img.Description</span>
+                    </div>
+                    <button class="like">
+                        <span class="like-count">@img.HeartCount</span>
+                        <span class="material-symbols-outlined">favorite</span>
+                    </button>
+                </div>
+            }
+        </main>
+    </div>
+
+    <div class="footer">
+        <p>&copy; Art Online, 2026. All rights reserved.</p>
+        <div class="cont">
+            <p>Connect w/ Developers:</p>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
+                <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
+            </svg>
+            <a href="">developers&#64;gmail.com</a>
+        </div>
+    </div>
+
+    <!-- Add Image Modal -->
+    <div class="gallery-modal" id="addModal">
+        <div class="gallery-modal-content">
+            <div class="modal-left">
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('imageFileInput').click();">
+                    <span class="material-symbols-rounded" style="font-size:3rem;">cloud_upload</span>
+                    <p>Click to upload image</p>
+                </div>
+                <img id="previewImg" style="display:none; max-width:100%; max-height:100%; object-fit:contain;">
+            </div>
+            <div class="modal-right">
+                <form method="post" asp-page-handler="Upload" enctype="multipart/form-data" id="uploadForm">
+                    <input type="file" id="imageFileInput" name="imageFile" accept="image/*" style="display:none;" onchange="previewImage(this)">
+                    <label>Title *</label>
+                    <input type="text" name="title" required placeholder="Enter title">
+                    <label>Description</label>
+                    <input type="text" name="description" placeholder="Enter description">
+                    <label>Tags</label>
+                    <div class="tags-select" id="addTags">
+                        @foreach (var tag in Model.AllTags)
+                        {
+                            <span class="tag-opt" data-tag="@tag.Name" onclick="toggleTag(this)">@tag.Name</span>
+                        }
+                        <span class="tag-opt" style="border-style:dashed;" onclick="addNewTag()">+ New Tag</span>
+                    </div>
+                    <input type="hidden" name="tags" id="selectedTagsInput">
+                    <div class="modal-buttons">
+                        <button type="button" class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+                        <button type="submit" class="btn-save">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Image Modal -->
+    <div class="gallery-modal" id="viewModal">
+        <div class="gallery-modal-content">
+            <div class="modal-left">
+                <img id="viewImg" src="" style="max-width:100%; max-height:100%; object-fit:contain;">
+            </div>
+            <div class="modal-right" id="viewRight">
+                <div class="modal-actions-top" id="viewActions">
+                    <button onclick="enterEditMode()" id="editViewBtn"><span class="material-symbols-rounded" style="color:#3E4A8E;">edit</span></button>
+                    <button onclick="confirmDelete()" id="deleteViewBtn"><span class="material-symbols-rounded" style="color:#9e3e3e;">delete</span></button>
+                </div>
+                <div id="viewDetails">
+                    <div class="detail-row"><label>Title</label><p id="viewTitle"></p></div>
+                    <div class="detail-row"><label>Description</label><p id="viewDesc"></p></div>
+                    <div class="detail-row"><label>Tags</label><p id="viewTags"></p></div>
+                    <div class="detail-row"><label>Hearts</label><p id="viewHearts"></p></div>
+                    <div class="detail-row"><label>Date Added</label><p id="viewDate"></p></div>
+                </div>
+                <div id="editDetails" style="display:none;">
+                    <form method="post" asp-page-handler="Edit" id="editForm">
+                        <input type="hidden" name="imageId" id="editImageId">
+                        <label>Title *</label>
+                        <input type="text" name="title" id="editTitle" required>
+                        <label>Description</label>
+                        <input type="text" name="description" id="editDesc">
+                        <label>Tags</label>
+                        <div class="tags-select" id="editTagsSelect"></div>
+                        <input type="hidden" name="tags" id="editTagsInput">
+                        <div class="modal-buttons">
+                            <button type="submit" class="btn-save">Save Changes</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-buttons" id="viewCloseBtn">
+                    <button type="button" class="btn-cancel" onclick="closeViewModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div class="confirm-modal" id="confirmModal">
+        <div class="confirm-content">
+            <p>Are you sure you want to delete this image?</p>
+            <div class="confirm-buttons" style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+                <button class="btn-cancel" onclick="closeConfirm()" style="padding:8px 20px; border:2px solid #1b1b1b; background:white; border-radius:20px; font-weight:600; cursor:pointer;">Cancel</button>
+                <form method="post" asp-page-handler="Delete" style="display:inline;">
+                    <input type="hidden" name="imageId" id="deleteImageId">
+                    <button type="submit" class="btn-save" style="padding:8px 20px; border:none; background:#3E4A8E; color:white; border-radius:20px; font-weight:600; cursor:pointer;">Yes, Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Custom prompt modal
+    function galleryPrompt(label, defaultVal) {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;display:flex;justify-content:center;align-items:center;';
+            modal.innerHTML = `
+                <div style="background:white;border-radius:12px;padding:25px 30px;min-width:350px;max-width:450px;box-shadow:0 10px 40px rgba(0,0,0,0.3);font-family:'Inter',sans-serif;">
+                    <p style="font-size:0.9rem;font-weight:600;color:#1b1b1b;margin-bottom:10px;">${label}</p>
+                    <input type="text" value="${defaultVal || ''}" style="width:100%;padding:10px 14px;font-size:1rem;border:2px solid #3E4A8E;border-radius:8px;outline:none;font-family:'Inter',sans-serif;">
+                    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;">
+                        <button onclick="this.closest('div').closest('div').remove()" style="padding:8px 20px;border:2px solid #1b1b1b;background:white;border-radius:20px;font-weight:600;cursor:pointer;">Cancel</button>
+                        <button id="gpOk" style="padding:8px 20px;border:none;background:#3E4A8E;color:white;border-radius:20px;font-weight:600;cursor:pointer;">OK</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+            const input = modal.querySelector('input');
+            input.focus();
+            modal.querySelector('#gpOk').onclick = () => { const v = input.value; modal.remove(); resolve(v); };
+            modal.querySelector('button').onclick = () => { modal.remove(); resolve(null); };
+            input.onkeydown = (e) => { if(e.key==='Enter'){const v=input.value;modal.remove();resolve(v);} if(e.key==='Escape'){modal.remove();resolve(null);} };
+        });
+    }
+
+    let currentImageId = 0;
+    const allTags = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AllTags.Select(t => t.Name).ToList()));
+
+    // Search
+    function doSearch() {
+        const q = document.getElementById('searchInput').value;
+        window.location.href = '/ArtistGallery?search=' + encodeURIComponent(q);
+    }
+    document.getElementById('searchInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
+
+    // Filter by tag
+    document.getElementById('filterBtn').addEventListener('click', () => {
+        document.getElementById('filterModal').style.display = 'flex';
+    });
+
+    function clearFilter() {
+        // Deselect all tags but keep modal open
+        document.querySelectorAll('#filterTags .tag-chip').forEach(t => t.classList.remove('active'));
+    }
+
+    function applyFilter() {
+        const selected = document.querySelector('#filterTags .tag-chip.active');
+        if (selected) {
+            window.location.href = '/ArtistGallery?tag=' + encodeURIComponent(selected.dataset.tag);
+        } else {
+            window.location.href = '/ArtistGallery';
+        }
+    }
+
+    // Add Modal
+    document.getElementById('addBtn').addEventListener('click', () => {
+        document.getElementById('addModal').classList.add('show');
+    });
+
+    function closeAddModal() {
+        document.getElementById('addModal').classList.remove('show');
+        // Reset the form
+        document.getElementById('uploadForm').reset();
+        // Reset image preview
+        document.getElementById('uploadArea').style.display = 'flex';
+        document.getElementById('previewImg').style.display = 'none';
+        // Deselect all tags
+        document.querySelectorAll('#addTags .tag-opt.selected').forEach(t => t.classList.remove('selected'));
+        document.getElementById('selectedTagsInput').value = '';
+    }
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('previewImg').style.display = 'block';
+                document.getElementById('uploadArea').style.display = 'none';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function toggleTag(el) {
+        el.classList.toggle('selected');
+        updateTagsInput('addTags', 'selectedTagsInput');
+    }
+
+    function updateTagsInput(containerId, inputId) {
+        const selected = document.querySelectorAll('#' + containerId + ' .tag-opt.selected');
+        const tags = Array.from(selected).map(s => s.dataset.tag).join(',');
+        document.getElementById(inputId).value = tags;
+    }
+
+    async function addNewTag() {
+        const name = await galleryPrompt('Enter new tag name:', '');
+        if (name && name.trim()) {
+            // Add tag client-side (no page reload)
+            const tagsContainer = document.getElementById('addTags');
+            const newTagBtn = tagsContainer.querySelector('[style*="dashed"]');
+            const tagSpan = document.createElement('span');
+            tagSpan.className = 'tag-opt selected';
+            tagSpan.dataset.tag = name.trim();
+            tagSpan.textContent = name.trim();
+            tagSpan.onclick = function() { this.classList.toggle('selected'); updateTagsInput('addTags', 'selectedTagsInput'); };
+            tagsContainer.insertBefore(tagSpan, newTagBtn);
+            updateTagsInput('addTags', 'selectedTagsInput');
+            // Also add to filter modal
+            const filterTagsContainer = document.getElementById('filterTags');
+            const filterTagSpan = document.createElement('span');
+            filterTagSpan.className = 'tag-chip';
+            filterTagSpan.dataset.tag = name.trim();
+            filterTagSpan.textContent = name.trim();
+            filterTagSpan.style.cssText = 'padding:6px 14px; border:2px solid #3E4A8E; border-radius:20px; font-size:0.85rem; font-weight:600; cursor:pointer;';
+            filterTagSpan.onclick = function() { document.querySelectorAll('#filterTags .tag-chip').forEach(t=>t.classList.remove('active')); this.classList.add('active'); };
+            filterTagsContainer.appendChild(filterTagSpan);
+
+            // Save tag to server in background
+            const formData = new FormData();
+            formData.append('tagName', name.trim());
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+            fetch('/ArtistGallery?handler=AddTag', {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': token },
+                body: formData
+            });
+        }
+    }
+
+    // Upload form: collect tags before submit
+    document.getElementById('uploadForm').addEventListener('submit', () => {
+        updateTagsInput('addTags', 'selectedTagsInput');
+    });
+
+    // View Image Modal
+    function viewImage(id, title, desc, tags, hearts, date, imgPath) {
+        currentImageId = id;
+        document.getElementById('viewImg').src = imgPath;
+        document.getElementById('viewTitle').textContent = title;
+        document.getElementById('viewDesc').textContent = desc || '(none)';
+        document.getElementById('viewTags').textContent = tags || '(none)';
+        document.getElementById('viewHearts').textContent = hearts;
+        document.getElementById('viewDate').textContent = date;
+        document.getElementById('editImageId').value = id;
+        document.getElementById('deleteImageId').value = id;
+        document.getElementById('editTitle').value = title;
+        document.getElementById('editDesc').value = desc;
+        document.getElementById('viewDetails').style.display = 'block';
+        document.getElementById('editDetails').style.display = 'none';
+        document.getElementById('editViewBtn').innerHTML = '<span class="material-symbols-rounded" style="color:#3E4A8E;">edit</span>';
+        document.getElementById('viewModal').classList.add('show');
+    }
+
+    function closeViewModal() {
+        document.getElementById('viewModal').classList.remove('show');
+    }
+
+    let isEditing = false;
+    function enterEditMode() {
+        isEditing = !isEditing;
+        if (isEditing) {
+            document.getElementById('viewDetails').style.display = 'none';
+            document.getElementById('editDetails').style.display = 'block';
+            document.getElementById('viewCloseBtn').style.display = 'none';
+            document.getElementById('editViewBtn').innerHTML = '<span class="material-symbols-rounded" style="color:#9e3e3e;">close</span>';
+            // Populate edit tags
+            const editTagsDiv = document.getElementById('editTagsSelect');
+            const currentTags = document.getElementById('viewTags').textContent.split(',').map(t => t.trim());
+            editTagsDiv.innerHTML = '';
+            allTags.forEach(tag => {
+                const span = document.createElement('span');
+                span.className = 'tag-opt' + (currentTags.includes(tag) ? ' selected' : '');
+                span.dataset.tag = tag;
+                span.textContent = tag;
+                span.onclick = () => { span.classList.toggle('selected'); updateTagsInput('editTagsSelect', 'editTagsInput'); };
+                editTagsDiv.appendChild(span);
+            });
+            // Add new tag option
+            const addSpan = document.createElement('span');
+            addSpan.className = 'tag-opt';
+            addSpan.style.borderStyle = 'dashed';
+            addSpan.textContent = '+ New Tag';
+            addSpan.onclick = addNewTag;
+            editTagsDiv.appendChild(addSpan);
+            updateTagsInput('editTagsSelect', 'editTagsInput');
+        } else {
+            document.getElementById('viewDetails').style.display = 'block';
+            document.getElementById('editDetails').style.display = 'none';
+            document.getElementById('viewCloseBtn').style.display = 'flex';
+            document.getElementById('editViewBtn').innerHTML = '<span class="material-symbols-rounded" style="color:#3E4A8E;">edit</span>';
+        }
+    }
+
+    // Edit form: collect tags before submit
+    document.getElementById('editForm').addEventListener('submit', () => {
+        updateTagsInput('editTagsSelect', 'editTagsInput');
+    });
+
+    // Confirm Delete
+    function confirmDelete() {
+        document.getElementById('confirmModal').classList.add('show');
+    }
+    function closeConfirm() {
+        document.getElementById('confirmModal').classList.remove('show');
+    }
+</script>
+
+</body>
+</html>

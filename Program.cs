@@ -60,6 +60,16 @@ using (var scope = app.Services.CreateScope())
         });
         db.SaveChanges();
     }
+
+    // Seed default gallery tags if none exist
+    if (!db.GalleryTags.Any())
+    {
+        db.GalleryTags.Add(new GalleryTag { Name = "Sketch" });
+        db.GalleryTags.Add(new GalleryTag { Name = "Fully Rendered" });
+        db.GalleryTags.Add(new GalleryTag { Name = "OC" });
+        db.GalleryTags.Add(new GalleryTag { Name = "Chibi" });
+        db.SaveChanges();
+    }
 }
 
 // Configure the HTTP request pipeline.
@@ -76,6 +86,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.UseStaticFiles();
 app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();

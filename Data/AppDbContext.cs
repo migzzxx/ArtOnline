@@ -13,4 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Review> Reviews { get; set; }
     public DbSet<CommissionStatus> CommissionStatuses { get; set; }
     public DbSet<FormTemplate> FormTemplates { get; set; }
+    public DbSet<GalleryImage> GalleryImages { get; set; }
+    public DbSet<GalleryTag> GalleryTags { get; set; }
+    public DbSet<GalleryHeart> GalleryHearts { get; set; }
 }
