@@ -14,6 +14,14 @@
     <link rel="stylesheet" href="~/css/comm_artistui.css">
 </head>
 
+<style>
+    .file-preview {
+        display: flex; align-items: center;
+        transition: background-color 0.2s;
+    }
+    .file-preview:hover { background-color: #e2e2e2; }
+</style>
+
 <body>
     <div class="header">
         <div class="left">
@@ -216,7 +224,14 @@
                                 </div>
                                 <div class="input">
                                     <p>Character Sheet</p>
-                                    <input type="text" class="box" value="@(string.IsNullOrEmpty(vc.CharacterSheetPath) ? "No file uploaded" : System.IO.Path.GetFileName(vc.CharacterSheetPath))" disabled>
+                                    @if (!string.IsNullOrEmpty(vc.CharacterSheetPath))
+                                    {
+                                        <div class="box file-preview" style="cursor:pointer;" onclick="showImagePreviewUrl('@vc.CharacterSheetPath')">@System.IO.Path.GetFileName(vc.CharacterSheetPath)</div>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="box" value="No file uploaded" disabled>
+                                    }
                                 </div>
                                 <div class="input">
                                     <p>Character Reference</p>
@@ -236,11 +251,25 @@
                                 </div>
                                 <div class="input">
                                     <p>Reference Pose</p>
-                                    <input type="text" class="box" value="@(string.IsNullOrEmpty(vc.ReferencePosePath) ? "No file" : System.IO.Path.GetFileName(vc.ReferencePosePath))" disabled>
+                                    @if (!string.IsNullOrEmpty(vc.ReferencePosePath))
+                                    {
+                                        <div class="box file-preview" style="cursor:pointer;" onclick="showImagePreviewUrl('@vc.ReferencePosePath')">@System.IO.Path.GetFileName(vc.ReferencePosePath)</div>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="box" value="No file" disabled>
+                                    }
                                 </div>
                                 <div class="input">
                                     <p>Reference Background</p>
-                                    <input type="text" class="box" value="@(string.IsNullOrEmpty(vc.ReferenceBackgroundPath) ? "No file uploaded" : System.IO.Path.GetFileName(vc.ReferenceBackgroundPath))" disabled>
+                                    @if (!string.IsNullOrEmpty(vc.ReferenceBackgroundPath))
+                                    {
+                                        <div class="box file-preview" style="cursor:pointer;" onclick="showImagePreviewUrl('@vc.ReferenceBackgroundPath')">@System.IO.Path.GetFileName(vc.ReferenceBackgroundPath)</div>
+                                    }
+                                    else
+                                    {
+                                        <input type="text" class="box" value="No file uploaded" disabled>
+                                    }
                                 </div>
                                 <div class="input">
                                     <p>Canvas Size</p>
@@ -284,6 +313,20 @@
     </div>
 
 <script>
+    // Image preview popup
+    function showImagePreviewUrl(url) {
+        if (document.querySelector('.img-preview-overlay')) return;
+        const overlay = document.createElement('div');
+        overlay.className = 'img-preview-overlay';
+        overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999999; display:flex; justify-content:center; align-items:center; cursor:pointer;';
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.cssText = 'max-width:90%; max-height:90%; object-fit:contain; border-radius:8px;';
+        overlay.appendChild(img);
+        overlay.addEventListener('click', (ev) => { ev.stopPropagation(); overlay.remove(); });
+        document.body.appendChild(overlay);
+    }
+
     // Commission filter icons
     const filterProgress = document.getElementById('filterProgress');
     const filterCheck = document.getElementById('filterCheck');
