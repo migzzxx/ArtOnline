@@ -41,7 +41,7 @@
                 <div style="overflow-y:auto; flex:1; min-height:0;">
                 @foreach (var c in Model.AllCommissions)
                 {
-                    <div class="queue" data-status="@c.Status" style="cursor: pointer;" onclick="window.location.href='/ArtistCommission?commissionId=@c.Id'">
+                    <div class="queue" data-status="@c.Status" style="cursor: pointer;" onclick="saveFilterState(); window.location.href='/ArtistCommission?commissionId=@c.Id'">
                         <div class="pleft" style="background-color: @(c.Status == "Pending" ? "#ec7c7c" : c.Status == "Working" ? "#ecb07c" : "#7cec7c")"></div>
                         <div class="pending">
                             <div class="pmid">
@@ -84,7 +84,7 @@
                         var timeDisplay = timeDiff.TotalHours < 24 ? msg.SentAt.ToString("h:mm tt") : msg.SentAt.ToString("dd/MM/yyyy");
                         var displayName = msg.IsArtist ? "You" : "@" + Model.CommissionUsername;
                         var bubbleClass = msg.IsArtist ? "self" : "other";
-                        <div class="chat @bubbleClass">
+                        <div class="chat @bubbleClass" data-msg-id="@msg.Id">
                             <span class="user">@displayName</span>
                             <div class="bubble">@msg.Message</div>
                             <span class="time">@timeDisplay</span>
@@ -118,19 +118,19 @@
                 @if (Model.ViewingCommission != null && Model.ViewingCommission.Status != "Completed")
                 {
                     <div style="position:absolute; right:15px; display:flex; align-items:center;">
-                        <form method="post" asp-page-handler="UpdateStatus" style="display:inline;">
+                        <form method="post" asp-page-handler="UpdateStatus" style="display:inline;" id="statusForm">
                             <input type="hidden" name="CommissionId" value="@Model.ViewingCommission.Id" />
                             @if (Model.ViewingCommission.Status == "Pending")
                             {
                                 <input type="hidden" name="NewStatus" value="Working" />
-                                <button type="submit" style="background:none; border:none; cursor:pointer; display:flex; align-items:center;" title="Change to Working">
+                                <button type="button" onclick="showStatusModal('Working')" style="background:none; border:none; cursor:pointer; display:flex; align-items:center;" title="Change to Working">
                                     <span class="material-symbols-rounded" style="font-size:1.8rem;">edit</span>
                                 </button>
                             }
                             else if (Model.ViewingCommission.Status == "Working")
                             {
                                 <input type="hidden" name="NewStatus" value="Completed" />
-                                <button type="submit" style="background:none; border:none; cursor:pointer; display:flex; align-items:center;" title="Change to Completed">
+                                <button type="button" onclick="showStatusModal('Completed')" style="background:none; border:none; cursor:pointer; display:flex; align-items:center;" title="Change to Completed">
                                     <span class="material-symbols-rounded" style="font-size:1.8rem;">edit</span>
                                 </button>
                             }
@@ -158,6 +158,16 @@
                                 <span class="label">Username</span>
                                 <span class="colon">:</span>
                                 <span class="value">@Model.CommissionUsername</span>
+                            </p>
+                            <p>
+                                <span class="label">First Name</span>
+                                <span class="colon">:</span>
+                                <span class="value">@(vc.User?.FirstName ?? "")</span>
+                            </p>
+                            <p>
+                                <span class="label">Last Name</span>
+                                <span class="colon">:</span>
+                                <span class="value">@(vc.User?.LastName ?? "")</span>
                             </p>
                             <p>
                                 <span class="label">Email Address</span>
@@ -280,6 +290,34 @@
     let progressState = 0;
     let checkState = 0;
 
+    function saveFilterState() {
+        const scrollEl = document.querySelector('.queue')?.parentElement;
+        sessionStorage.setItem('artistFilterProgress', progressState);
+        sessionStorage.setItem('artistFilterCheck', checkState);
+        if (scrollEl) sessionStorage.setItem('artistScrollTop', scrollEl.scrollTop);
+    }
+
+    function restoreFilterState() {
+        const savedProgress = sessionStorage.getItem('artistFilterProgress');
+        const savedCheck = sessionStorage.getItem('artistFilterCheck');
+        const savedScroll = sessionStorage.getItem('artistScrollTop');
+        if (savedProgress !== null) {
+            progressState = parseInt(savedProgress);
+            if (progressState === 1) filterProgress.style.color = '#9e3e3e';
+            else if (progressState === 2) filterProgress.style.color = '#d4890a';
+            else filterProgress.style.color = '';
+        }
+        if (savedCheck !== null) {
+            checkState = parseInt(savedCheck);
+            filterCheck.style.color = checkState === 1 ? '#3e9e3e' : '';
+        }
+        applyFilter();
+        if (savedScroll !== null) {
+            const scrollEl = document.querySelector('.queue')?.parentElement;
+            if (scrollEl) setTimeout(() => { scrollEl.scrollTop = parseInt(savedScroll); }, 50);
+        }
+    }
+
     function applyFilter() {
         const queues = document.querySelectorAll('.queue[data-status]');
         queues.forEach(q => {
@@ -318,11 +356,60 @@
         applyFilter();
     });
 
-    applyFilter();
+    restoreFilterState();
 
     // Auto-scroll chat to bottom
     const chatArea = document.getElementById('chatArea');
     if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+
+    // Live chat polling - check for new messages every 3 seconds
+    let lastMsgId = 0;
+    document.querySelectorAll('#chatArea .chat').forEach(el => {
+        const id = parseInt(el.dataset?.msgId || '0');
+        if (id > lastMsgId) lastMsgId = id;
+    });
+
+    const selectedCommId = @(Model.SelectedCommissionId);
+    if (selectedCommId > 0) {
+        setInterval(async () => {
+            try {
+                const resp = await fetch(`/ArtistCommission?handler=Messages&commissionId=${selectedCommId}&lastId=${lastMsgId}`);
+                const messages = await resp.json();
+                if (messages.length > 0) {
+                    const chatEl = document.getElementById('chatArea');
+                    messages.forEach(msg => {
+                        const displayName = msg.isArtist ? 'You' : '@@' + msg.senderUsername;
+                        const bubbleClass = msg.isArtist ? 'self' : 'other';
+                        const div = document.createElement('div');
+                        div.className = 'chat ' + bubbleClass;
+                        div.dataset.msgId = msg.id;
+                        div.innerHTML = `<span class="user">${displayName}</span><div class="bubble">${msg.message}</div><span class="time">${msg.time}</span>`;
+                        chatEl.appendChild(div);
+                        lastMsgId = msg.id;
+                    });
+                    chatEl.scrollTop = chatEl.scrollHeight;
+                }
+            } catch(e) {}
+        }, 3000);
+    }
+</script>
+
+<!-- Status Change Confirmation Modal -->
+<div id="statusModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:12px; padding:20px 25px; min-width:300px; max-width:400px; box-shadow:0 10px 40px rgba(0,0,0,0.3); font-family:'Inter',sans-serif;">
+        <p id="statusModalText" style="font-size:1rem; font-weight:600; color:#1b1b1b; margin-bottom:18px;"></p>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button onclick="document.getElementById('statusModal').style.display='none'" style="padding:6px 20px; border:2px solid #1b1b1b; background:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; font-size:0.85rem;">Cancel</button>
+            <button onclick="document.getElementById('statusForm').submit()" style="padding:6px 20px; border:none; background:#3E4A8E; color:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; font-size:0.85rem;">OK</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showStatusModal(newStatus) {
+        document.getElementById('statusModalText').textContent = 'Change status to ' + newStatus + '?';
+        document.getElementById('statusModal').style.display = 'flex';
+    }
 </script>
 
 </body>

@@ -42,7 +42,7 @@
                 <div style="overflow-y:auto; flex:1; min-height:0;">
                 @foreach (var c in Model.Commissions)
                 {
-                    <div class="queue" data-status="@c.Status" style="cursor: pointer;" onclick="window.location.href='/Commission?commissionId=@c.Id'">
+                    <div class="queue" data-status="@c.Status" style="cursor: pointer;" onclick="saveFilterState(); window.location.href='/Commission?commissionId=@c.Id'">
                         <div class="pleft" style="background-color: @(c.Status == "Pending" ? "#ec7c7c" : c.Status == "Working" ? "#ecb07c" : "#7cec7c")"></div>
                         <div class="pending">
                             <div class="pmid">
@@ -84,7 +84,7 @@
                         var timeDiff = DateTime.Now - msg.SentAt;
                         var timeDisplay = timeDiff.TotalHours < 24 ? msg.SentAt.ToString("h:mm tt") : msg.SentAt.ToString("dd/MM/yyyy");
                         var displayName = msg.IsArtist ? "Amoreivc" : "You";
-                        <div class="chat-msg">
+                        <div class="chat-msg" data-msg-id="@msg.Id">
                             <span class="sender">@displayName</span>
                             <div class="bubble @(msg.IsArtist ? "artist-msg" : "user-msg")">@msg.Message</div>
                             <span class="time">@timeDisplay</span>
@@ -117,7 +117,7 @@
                     {
                         @if (Model.IsEditing)
                         {
-                            <a href="/Commission?commissionId=@Model.SelectedCommissionId" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; text-decoration:none; margin-right:10px;">
+                            <a href="#" id="discardEditBtn" onclick="handleDiscardEdit(event)" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; text-decoration:none; margin-right:10px;">
                                 <span class="material-symbols-rounded" style="font-size:1.8rem; color:#9e3e3e;">close</span>
                             </a>
                         }
@@ -128,7 +128,7 @@
                             </a>
                         }
                     }
-                    <button type="button" id="toggleFormBtn" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; position:static; @(Model.IsCommissionOpen ? "" : "display:none;")">
+                    <button type="button" id="toggleFormBtn" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; position:static; @(Model.IsCommissionOpen ? "" : "display:none;") @(Model.IsEditing ? "opacity:0.35; pointer-events:none;" : "")">
                         <span class="material-symbols-rounded">add_2</span>
                     </button>
                 </div>
@@ -157,6 +157,30 @@
                     @* === VIEW/EDIT EXISTING COMMISSION === *@
                     var vc = Model.ViewingCommission;
                     var disabled = Model.IsEditing ? "" : "disabled";
+
+                    @if (vc.CustomFieldsJson != null && Model.ViewingTemplateJson != null)
+                    {
+                        @* Dynamic view/edit for new commissions *@
+                        <form method="post" asp-page-handler="UpdateCommission" enctype="multipart/form-data" id="viewForm">
+                            <input type="hidden" name="CommissionId" value="@vc.Id" />
+                            <div class="form">
+                                <div class="fhead">
+                                    <h1>Commission Details</h1>
+                                    <p>Status: <strong>@vc.Status</strong> — Submitted @vc.DateSubmitted.ToString("d MMM yyyy") at @vc.TimeSubmitted</p>
+                                </div>
+                                <div id="dynamicViewForm"></div>
+                                @if (Model.IsEditing)
+                                {
+                                    <input type="hidden" name="CustomFieldsJson" id="editCustomFieldsJson">
+                                    <input type="hidden" name="FormTemplateVersion" value="@vc.FormTemplateVersion">
+                                    <div style="padding:15px 25px; display:flex; justify-content:flex-end;"><button type="submit" class="submit">Save Changes</button></div>
+                                }
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                    @* Hardcoded view/edit for old commissions *@
                     <form method="post" asp-page-handler="UpdateCommission" enctype="multipart/form-data" id="viewForm">
                         <input type="hidden" name="CommissionId" value="@vc.Id" />
                         <div class="form">
@@ -199,10 +223,10 @@
                                         <p>Character Sheet</p>
                                         @if (Model.IsEditing)
                                         {
-                                            <label class="text">
+                                            <div class="text edit-file-label" data-filepath="@vc.CharacterSheetPath" style="position:relative; cursor:pointer;">
                                                 <span class="placeholder">@(string.IsNullOrEmpty(vc.CharacterSheetPath) ? "No file uploaded" : System.IO.Path.GetFileName(vc.CharacterSheetPath))</span>
                                                 <span class="material-symbols-rounded">upload</span>
-                                            </label>
+                                            </div>
                                             <input type="file" accept="image/jpeg, image/png" class="file" name="CharacterSheet">
                                         }
                                         else
@@ -244,10 +268,10 @@
                                         <p>Reference Pose</p>
                                         @if (Model.IsEditing)
                                         {
-                                            <label class="text">
+                                            <div class="text edit-file-label" data-filepath="@vc.ReferencePosePath" style="position:relative; cursor:pointer;">
                                                 <span class="placeholder">@(string.IsNullOrEmpty(vc.ReferencePosePath) ? "No file" : System.IO.Path.GetFileName(vc.ReferencePosePath))</span>
                                                 <span class="material-symbols-rounded">upload</span>
-                                            </label>
+                                            </div>
                                             <input type="file" accept="image/jpeg, image/png" class="file" name="ReferencePose">
                                         }
                                         else
@@ -259,10 +283,10 @@
                                         <p>Reference Background</p>
                                         @if (Model.IsEditing)
                                         {
-                                            <label class="text">
+                                            <div class="text edit-file-label" data-filepath="@vc.ReferenceBackgroundPath" style="position:relative; cursor:pointer;">
                                                 <span class="placeholder">@(string.IsNullOrEmpty(vc.ReferenceBackgroundPath) ? "No file uploaded" : System.IO.Path.GetFileName(vc.ReferenceBackgroundPath))</span>
                                                 <span class="material-symbols-rounded">upload</span>
-                                            </label>
+                                            </div>
                                             <input type="file" accept="image/jpeg, image/png" class="file" name="ReferenceBackground">
                                         }
                                         else
@@ -321,14 +345,15 @@
                             </div>
                             @if (Model.IsEditing)
                             {
-                                <button type="submit" class="submit" style="margin-top:20px; margin-left:25px;">Save Changes</button>
+                                <div style="padding:15px 25px; display:flex; justify-content:flex-end;"><button type="submit" class="submit">Save Changes</button></div>
                             }
                         </div>
                     </form>
+                    }
                 }
 
                 @* === NEW COMMISSION FORM (DYNAMIC) === *@
-                <form method="post" enctype="multipart/form-data" id="formContent" style="display: none;">
+                <form method="post" asp-page="/Commission" enctype="multipart/form-data" id="formContent" style="display: none;">
                     <div class="form" id="dynamicForm"></div>
                     <input type="hidden" name="CustomFieldsJson" id="customFieldsJson">
                     <input type="hidden" name="FormTemplateVersion" value="@Model.CurrentTemplateVersion">
@@ -393,9 +418,23 @@
 
         // Re-attach file label click handlers
         container.querySelectorAll('label.text').forEach(label => {
-            label.addEventListener('click', () => {
+            const placeholder = label.querySelector('.placeholder');
+            if (placeholder) label.dataset.original = placeholder.textContent;
+            label.style.position = 'relative';
+            label.addEventListener('click', (e) => {
+                // Don't trigger file picker if clicking the X button
+                if (e.target.closest('.remove-file')) return;
+                e.preventDefault();
+                e.stopPropagation();
                 const fileInput = label.nextElementSibling;
-                if (fileInput && fileInput.type === 'file') fileInput.click();
+                if (fileInput && fileInput.type === 'file') {
+                    // If file already attached, show preview popup
+                    if (fileInput.files && fileInput.files.length > 0) {
+                        showImagePreview(fileInput.files[0]);
+                    } else {
+                        fileInput.click();
+                    }
+                }
             });
         });
         container.querySelectorAll('.file').forEach(input => {
@@ -403,14 +442,175 @@
                 const label = this.previousElementSibling;
                 if (label) {
                     const placeholder = label.querySelector('.placeholder');
-                    if (placeholder && this.files.length > 0) placeholder.textContent = this.files[0].name;
+                    if (placeholder && this.files.length > 0) {
+                        placeholder.textContent = this.files[0].name;
+                        // Add X remove button
+                        let removeBtn = label.querySelector('.remove-file');
+                        if (!removeBtn) {
+                            removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'remove-file';
+                            removeBtn.textContent = '✕';
+                            removeBtn.style.cssText = 'position:absolute; top:8px; right:10px; background:none; border:none; color:#9e3e3e; font-weight:700; font-size:1.2rem; cursor:pointer; z-index:5;';
+                            label.appendChild(removeBtn);
+                            removeBtn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                input.value = '';
+                                placeholder.textContent = label.dataset.original || 'Upload image (JPEG/PNG)';
+                                removeBtn.remove();
+                            });
+                        }
+                    }
                 }
             });
         });
     }
 
+    // Image preview popup
+    function showImagePreview(file) {
+        if (document.querySelector('.img-preview-overlay')) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const overlay = document.createElement('div');
+            overlay.className = 'img-preview-overlay';
+            overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999999; display:flex; justify-content:center; align-items:center; cursor:pointer;';
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.style.cssText = 'max-width:90%; max-height:90%; object-fit:contain; border-radius:8px;';
+            overlay.appendChild(img);
+            overlay.addEventListener('click', (ev) => { ev.stopPropagation(); overlay.remove(); });
+            document.body.appendChild(overlay);
+        };
+        reader.readAsDataURL(file);
+    }
+
     // Render the form on page load
     renderNewCommissionForm();
+
+    // === DYNAMIC VIEW/EDIT for commissions with CustomFieldsJson ===
+    const viewingTemplateRaw = @Html.Raw(Model.ViewingTemplateJson != null ? Model.ViewingTemplateJson : "null");
+    const viewingValuesRaw = @Html.Raw(Model.ViewingCommission?.CustomFieldsJson ?? "null");
+    const vcStatus = '@(Model.ViewingCommission?.Status ?? "")';
+    const vcDate = '@(Model.ViewingCommission?.DateSubmitted.ToString("d MMM yyyy") ?? "")';
+    const vcTime = '@(Model.ViewingCommission?.TimeSubmitted ?? "")';
+    const isEditMode = @(Model.IsEditing ? "true" : "false");
+
+    if (viewingTemplateRaw && viewingValuesRaw) {
+        const viewTemplate = typeof viewingTemplateRaw === 'string' ? JSON.parse(viewingTemplateRaw) : viewingTemplateRaw;
+        const viewValues = typeof viewingValuesRaw === 'string' ? JSON.parse(viewingValuesRaw) : viewingValuesRaw;
+        renderDynamicViewForm(viewTemplate, viewValues, isEditMode);
+    }
+
+    function renderDynamicViewForm(fields, values, editable) {
+        const container = document.getElementById('dynamicViewForm');
+        if (!container) return;
+        let html = '';
+        let inSection = false;
+
+        fields.forEach(field => {
+            const val = values['field_' + field.id] || '';
+            const filePath = values['file_' + field.id] || '';
+            const disabled = editable ? '' : 'disabled';
+
+            switch(field.type) {
+                case 'mainheader':
+                    break;
+                case 'subheader':
+                    if (inSection) html += '</div></div>';
+                    html += `<div class="cont"><h1>${field.label}</h1><div class="inputs">`;
+                    inSection = true;
+                    break;
+                case 'text':
+                    html += `<div class="input"><p>${field.label}</p><input type="text" class="box" name="field_${field.id}" value="${val.replace(/"/g, '&quot;')}" ${disabled}></div>`;
+                    break;
+                case 'file':
+                    const hasFile = filePath && filePath !== '';
+                    const fileName = hasFile ? filePath.split('/').pop() : 'No file';
+                    if (editable) {
+                        html += `<div class="input"><p>${field.label}</p><div class="text edit-file-label" data-filepath="${filePath}" style="position:relative; cursor:pointer;"><span class="placeholder">${fileName}</span><span class="material-symbols-rounded">upload</span></div><input type="file" accept="image/jpeg,image/png" class="file" name="file_${field.id}"></div>`;
+                    } else {
+                        if (hasFile) {
+                            html += `<div class="input"><p>${field.label}</p><div class="text" style="cursor:pointer; position:relative;" onclick="showImagePreviewUrl('${filePath}')"><span class="placeholder">${fileName}</span></div></div>`;
+                        } else {
+                            html += `<div class="input"><p>${field.label}</p><input type="text" class="box" value="No file" disabled></div>`;
+                        }
+                    }
+                    break;
+                case 'dropdown':
+                    if (editable) {
+                        const opts = (field.options || []).map(o => `<option value="${o}" ${o === val ? 'selected' : ''}>${o}</option>`).join('');
+                        html += `<div class="input"><p>${field.label}</p><select name="field_${field.id}"><option value="">-- Select --</option>${opts}</select></div>`;
+                    } else {
+                        html += `<div class="input"><p>${field.label}</p><select disabled><option selected>${val || '—'}</option></select></div>`;
+                    }
+                    break;
+                case 'textarea':
+                    html += `<div class="input"><p>${field.label}</p><textarea class="box" name="field_${field.id}" style="height:80px;resize:none;" ${disabled}>${val}</textarea></div>`;
+                    break;
+            }
+        });
+        if (inSection) html += '</div></div>';
+        container.innerHTML = html;
+
+        // If editable, attach file handlers for edit-file-label elements
+        if (editable) {
+            container.querySelectorAll('.edit-file-label').forEach(label => {
+                const placeholder = label.querySelector('.placeholder');
+                const fileInput = label.nextElementSibling;
+                const originalPath = label.dataset.filepath || '';
+                const originalName = placeholder ? placeholder.textContent : '';
+                const hasOriginalFile = originalPath && originalPath !== '' && originalName !== 'No file';
+                let state = hasOriginalFile ? 'original' : 'empty';
+
+                function addXBtn(onRemove) {
+                    let btn = label.querySelector('.remove-file');
+                    if (btn) btn.remove();
+                    btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'remove-file';
+                    btn.textContent = '✕';
+                    btn.style.cssText = 'position:absolute; top:8px; right:10px; background:none; border:none; color:#9e3e3e; font-weight:700; font-size:1.2rem; cursor:pointer; z-index:5;';
+                    label.appendChild(btn);
+                    btn.addEventListener('click', (e) => { e.stopPropagation(); e.preventDefault(); onRemove(); });
+                }
+                function setOriginal() { state='original'; if(fileInput)fileInput.value=''; if(placeholder)placeholder.textContent=originalName; label.dataset.filepath=originalPath; addXBtn(()=>setEmpty()); }
+                function setEmpty() { state='empty'; if(fileInput)fileInput.value=''; if(placeholder)placeholder.textContent='No file'; label.dataset.filepath=''; let b=label.querySelector('.remove-file'); if(b)b.remove(); }
+                function setNew(name) { state='new'; if(placeholder)placeholder.textContent=name; label.dataset.filepath='new'; addXBtn(()=>{ if(hasOriginalFile)setOriginal(); else setEmpty(); }); }
+
+                if (hasOriginalFile) addXBtn(()=>setEmpty());
+
+                label.addEventListener('click', (e) => {
+                    if (e.target.closest('.remove-file')) return;
+                    e.preventDefault(); e.stopPropagation();
+                    if (state==='new' && fileInput && fileInput.files && fileInput.files.length>0) showImagePreview(fileInput.files[0]);
+                    else if (state==='original' && originalPath) showImagePreviewUrl(originalPath);
+                    else { if(fileInput)fileInput.click(); }
+                });
+
+                if (fileInput) {
+                    fileInput.addEventListener('change', function() { if(this.files.length>0) setNew(this.files[0].name); });
+                }
+            });
+
+            // On form submit, collect field values for CustomFieldsJson
+            const viewForm = document.getElementById('viewForm');
+            if (viewForm) {
+                viewForm.addEventListener('submit', function() {
+                    const fields = {};
+                    container.querySelectorAll('[name^="field_"]').forEach(el => { fields[el.name] = el.value; });
+                    // Keep existing file paths
+                    container.querySelectorAll('.edit-file-label').forEach(l => {
+                        const fp = l.dataset.filepath;
+                        const name = l.nextElementSibling?.name;
+                        if (fp && fp !== '' && fp !== 'new' && name) fields[name] = fp;
+                    });
+                    const hiddenInput = document.getElementById('editCustomFieldsJson');
+                    if (hiddenInput) hiddenInput.value = JSON.stringify(fields);
+                });
+            }
+        }
+    }
 
     // On form submit, collect all field values into JSON
     const formContent = document.getElementById('formContent');
@@ -429,6 +629,35 @@
     const filterCheck = document.getElementById('filterCheck');
     let progressState = 0; // 0=default(all pending+working), 1=pending only(red), 2=working only(orange)
     let checkState = 0; // 0=default(hidden completed), 1=show completed only(green)
+
+    // Save/restore filter state across navigation
+    function saveFilterState() {
+        const scrollEl = document.querySelector('.queue')?.parentElement;
+        sessionStorage.setItem('commFilterProgress', progressState);
+        sessionStorage.setItem('commFilterCheck', checkState);
+        if (scrollEl) sessionStorage.setItem('commScrollTop', scrollEl.scrollTop);
+    }
+
+    function restoreFilterState() {
+        const savedProgress = sessionStorage.getItem('commFilterProgress');
+        const savedCheck = sessionStorage.getItem('commFilterCheck');
+        const savedScroll = sessionStorage.getItem('commScrollTop');
+        if (savedProgress !== null) {
+            progressState = parseInt(savedProgress);
+            if (progressState === 1) filterProgress.style.color = '#9e3e3e';
+            else if (progressState === 2) filterProgress.style.color = '#d4890a';
+            else filterProgress.style.color = '';
+        }
+        if (savedCheck !== null) {
+            checkState = parseInt(savedCheck);
+            filterCheck.style.color = checkState === 1 ? '#3e9e3e' : '';
+        }
+        applyFilter();
+        if (savedScroll !== null) {
+            const scrollEl = document.querySelector('.queue')?.parentElement;
+            if (scrollEl) setTimeout(() => { scrollEl.scrollTop = parseInt(savedScroll); }, 50);
+        }
+    }
 
     function applyFilter() {
         const queues = document.querySelectorAll('.queue[data-status]');
@@ -477,8 +706,8 @@
         applyFilter();
     });
 
-    // Apply default filter on page load (hide completed)
-    applyFilter();
+    // Restore filter state or apply default
+    restoreFilterState();
 
     // Toggle new form visibility (hides viewing commission when + is clicked)
     document.getElementById('toggleFormBtn').addEventListener('click', async () => {
@@ -562,11 +791,14 @@
     });
 
     // Make labels clickable to trigger file inputs
-    document.querySelectorAll('label.text').forEach(label => {
+    // Only apply to labels OUTSIDE the dynamic form (e.g. view/edit existing commissions)
+    // Exclude .edit-file-label which has its own handler
+    document.querySelectorAll('#viewForm label.text:not(.edit-file-label)').forEach(label => {
         const placeholder = label.querySelector('.placeholder');
         if (placeholder) label.dataset.original = placeholder.textContent;
         label.style.cursor = 'pointer';
-        label.addEventListener('click', () => {
+        label.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-file')) return;
             const fileInput = label.nextElementSibling;
             if (fileInput && fileInput.type === 'file') {
                 fileInput.click();
@@ -574,9 +806,141 @@
         });
     });
 
+    // Edit mode file fields (pending commission editing) - X button, preview, discard support
+    // Skip elements inside #dynamicViewForm (those have their own handlers attached by renderDynamicViewForm)
+    document.querySelectorAll('.edit-file-label').forEach(label => {
+        if (label.closest('#dynamicViewForm')) return;
+        const placeholder = label.querySelector('.placeholder');
+        const fileInput = label.nextElementSibling;
+        const originalPath = label.dataset.filepath || '';
+        const originalName = placeholder ? placeholder.textContent : '';
+        const hasOriginalFile = originalPath && originalPath !== '' && originalName !== 'No file uploaded' && originalName !== 'No file';
+        let state = hasOriginalFile ? 'original' : 'empty';
+
+        function addXBtn(onRemove) {
+            let btn = label.querySelector('.remove-file');
+            if (btn) btn.remove();
+            btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'remove-file';
+            btn.textContent = '✕';
+            btn.style.cssText = 'position:absolute; top:8px; right:10px; background:none; border:none; color:#9e3e3e; font-weight:700; font-size:1.2rem; cursor:pointer; z-index:5;';
+            label.appendChild(btn);
+            btn.addEventListener('click', (e) => { e.stopPropagation(); e.preventDefault(); onRemove(); });
+        }
+        function setOriginal() { state='original'; if(fileInput)fileInput.value=''; if(placeholder)placeholder.textContent=originalName; label.dataset.filepath=originalPath; addXBtn(()=>setEmpty()); }
+        function setEmpty() { state='empty'; if(fileInput)fileInput.value=''; if(placeholder)placeholder.textContent='No file'; label.dataset.filepath=''; let b=label.querySelector('.remove-file'); if(b)b.remove(); }
+        function setNew(name) { state='new'; if(placeholder)placeholder.textContent=name; label.dataset.filepath='new'; addXBtn(()=>{ if(hasOriginalFile)setOriginal(); else setEmpty(); }); }
+
+        if (hasOriginalFile) addXBtn(()=>setEmpty());
+
+        label.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-file')) return;
+            e.preventDefault(); e.stopPropagation();
+            if (state==='new' && fileInput && fileInput.files && fileInput.files.length>0) showImagePreview(fileInput.files[0]);
+            else if (state==='original' && originalPath) showImagePreviewUrl(originalPath);
+            else { if(fileInput) fileInput.click(); }
+        });
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function() { if(this.files.length>0) setNew(this.files[0].name); });
+        }
+    });
+
+    // Show image preview from URL (existing server images)
+    function showImagePreviewUrl(url) {
+        if (document.querySelector('.img-preview-overlay')) return;
+        const overlay = document.createElement('div');
+        overlay.className = 'img-preview-overlay';
+        overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999999; display:flex; justify-content:center; align-items:center; cursor:pointer;';
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.cssText = 'max-width:90%; max-height:90%; object-fit:contain; border-radius:8px;';
+        overlay.appendChild(img);
+        overlay.addEventListener('click', (ev) => { ev.stopPropagation(); overlay.remove(); });
+        document.body.appendChild(overlay);
+    }
+
     // Auto-scroll chat to bottom
     const chatArea = document.getElementById('chatArea');
     if (chatArea) chatArea.scrollTop = chatArea.scrollHeight;
+
+    // Live chat polling - check for new messages every 3 seconds
+    let lastMsgId = 0;
+    // Get the highest message ID currently displayed
+    document.querySelectorAll('#chatArea .chat-msg').forEach(el => {
+        const id = parseInt(el.dataset?.msgId || '0');
+        if (id > lastMsgId) lastMsgId = id;
+    });
+
+    const selectedCommId = @(Model.SelectedCommissionId);
+    if (selectedCommId > 0) {
+        setInterval(async () => {
+            try {
+                const resp = await fetch(`/Commission?handler=Messages&commissionId=${selectedCommId}&lastId=${lastMsgId}`);
+                const messages = await resp.json();
+                if (messages.length > 0) {
+                    const chatEl = document.getElementById('chatArea');
+                    messages.forEach(msg => {
+                        const displayName = msg.isArtist ? 'Amoreivc' : 'You';
+                        const bubbleClass = msg.isArtist ? 'artist-msg' : 'user-msg';
+                        const div = document.createElement('div');
+                        div.className = 'chat-msg';
+                        div.dataset.msgId = msg.id;
+                        div.innerHTML = `<span class="sender">${displayName}</span><div class="bubble ${bubbleClass}">${msg.message}</div><span class="time">${msg.time}</span>`;
+                        chatEl.appendChild(div);
+                        lastMsgId = msg.id;
+                    });
+                    chatEl.scrollTop = chatEl.scrollHeight;
+                }
+            } catch(e) {}
+        }, 3000);
+    }
+</script>
+
+<!-- Discard Changes Modal (user side - gold button) -->
+<div id="discardEditModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:12px; padding:20px 25px; min-width:300px; max-width:400px; box-shadow:0 10px 40px rgba(0,0,0,0.3); font-family:'Inter',sans-serif;">
+        <p style="font-size:1rem; font-weight:600; color:#1b1b1b; margin-bottom:18px;">Discard Changes?</p>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button onclick="document.getElementById('discardEditModal').style.display='none'" style="padding:6px 20px; border:2px solid #1b1b1b; background:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; font-size:0.85rem;">Cancel</button>
+            <button onclick="window.location.href='/Commission?commissionId=@Model.SelectedCommissionId'" style="padding:6px 20px; border:none; background:#DCC863; color:#1b1b1b; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; font-size:0.85rem;">Discard</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Handle discard edit - check if form has changes
+    function handleDiscardEdit(e) {
+        e.preventDefault();
+        const form = document.getElementById('viewForm');
+        if (!form) { window.location.href = '/Commission?commissionId=@Model.SelectedCommissionId'; return; }
+        // Check if any file was changed or any text/select was modified
+        const fileChanged = Array.from(form.querySelectorAll('input[type="file"]')).some(f => f.files.length > 0);
+        const textChanged = Array.from(form.querySelectorAll('input[type="text"], input[type="tel"], textarea, select')).some(el => {
+            return el.dataset.origVal !== undefined && el.value !== el.dataset.origVal;
+        });
+        const fileRemoved = Array.from(form.querySelectorAll('.edit-file-label')).some(l => {
+            return l.dataset.filepath !== l.dataset.origpath;
+        });
+        const hasChanges = fileChanged || textChanged || fileRemoved;
+        if (hasChanges) {
+            document.getElementById('discardEditModal').style.display = 'flex';
+        } else {
+            window.location.href = '/Commission?commissionId=@Model.SelectedCommissionId';
+        }
+    }
+
+    // Store original values on page load for change detection
+    const editForm = document.getElementById('viewForm');
+    if (editForm) {
+        editForm.querySelectorAll('input[type="text"], input[type="tel"], textarea, select').forEach(el => {
+            el.dataset.origVal = el.value;
+        });
+        editForm.querySelectorAll('.edit-file-label').forEach(l => {
+            l.dataset.origpath = l.dataset.filepath || '';
+        });
+    }
 </script>
 
 </body>

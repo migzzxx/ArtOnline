@@ -29,6 +29,7 @@ public class CommissionModel : PageModel
     public bool IsCommissionOpen { get; set; } = true;
     public string CurrentTemplateJson { get; set; } = "[]";
     public int CurrentTemplateVersion { get; set; }
+    public string? ViewingTemplateJson { get; set; }
 
     [BindProperty] public string Email { get; set; } = "";
     [BindProperty] public string ContactNumber { get; set; } = "";
@@ -79,6 +80,18 @@ public class CommissionModel : PageModel
             SelectedCommissionId = commissionId.Value;
             ViewingCommission = Commissions.First(c => c.Id == commissionId.Value);
             IsEditing = edit && ViewingCommission.Status == "Pending";
+
+            // Load the template used for this commission (for dynamic rendering)
+            if (ViewingCommission.CustomFieldsJson != null)
+            {
+                var tmpl = _db.FormTemplates.FirstOrDefault(t => t.Version == ViewingCommission.FormTemplateVersion);
+                if (tmpl != null) ViewingTemplateJson = tmpl.FieldsJson;
+                else
+                {
+                    var current = _db.FormTemplates.FirstOrDefault(t => t.IsCurrent);
+                    if (current != null) ViewingTemplateJson = current.FieldsJson;
+                }
+            }
         }
 
         if (SelectedCommissionId > 0)
@@ -124,6 +137,58 @@ public class CommissionModel : PageModel
             return RedirectToPage("/Commission", new { commissionId = CommissionId });
         }
 
+        // Check if this is a dynamic commission update
+        var editCustomJson = Request.Form["CustomFieldsJson"].ToString();
+        if (!string.IsNullOrWhiteSpace(editCustomJson))
+        {
+            // Dynamic commission: update CustomFieldsJson and handle files
+            var editValues = JsonSerializer.Deserialize<Dictionary<string, string>>(editCustomJson) ?? new();
+
+            var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "commissions", userId.ToString());
+            Directory.CreateDirectory(uploadDir);
+
+            foreach (var file in Request.Form.Files)
+            {
+                if (file.Length > 0)
+                {
+                    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                    var filePath = Path.Combine(uploadDir, fileName);
+                    using var stream = new FileStream(filePath, FileMode.Create);
+                    await file.CopyToAsync(stream);
+                    var savedPath = $"/uploads/commissions/{userId}/{fileName}";
+                    editValues[file.Name] = savedPath;
+                }
+            }
+
+            commission.CustomFieldsJson = JsonSerializer.Serialize(editValues);
+
+            // Also update hardcoded columns for queue display
+            var template = _db.FormTemplates.FirstOrDefault(t => t.Version == commission.FormTemplateVersion)
+                ?? _db.FormTemplates.FirstOrDefault(t => t.IsCurrent);
+            if (template != null)
+            {
+                var templateFieldsList = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(template.FieldsJson) ?? new();
+                string GetVal(string labelContains) {
+                    foreach (var tf in templateFieldsList) {
+                        if (tf.ContainsKey("label") && tf["label"].GetString()?.ToLower().Contains(labelContains.ToLower()) == true) {
+                            var fId = tf.ContainsKey("id") ? tf["id"].GetString() ?? "" : "";
+                            var key = "field_" + fId;
+                            if (editValues.ContainsKey(key)) return editValues[key];
+                        }
+                    }
+                    return "";
+                }
+                commission.Subject = GetVal("subject") != "" ? GetVal("subject") : commission.Subject;
+                commission.RushCommission = GetVal("rush").ToLower() == "yes";
+                commission.CommissionType1 = GetVal("body") != "" ? GetVal("body") : commission.CommissionType1;
+                commission.CommissionType2 = GetVal("character") != "" ? GetVal("character") : (GetVal("person") != "" ? GetVal("person") : commission.CommissionType2);
+                commission.CommissionType3 = GetVal("style") != "" ? GetVal("style") : commission.CommissionType3;
+            }
+
+            await _db.SaveChangesAsync();
+            return RedirectToPage("/Commission", new { commissionId = CommissionId });
+        }
+
         // Update text fields
         commission.Email = Email;
         commission.ContactNumber = ContactNumber;
@@ -140,13 +205,13 @@ public class CommissionModel : PageModel
         commission.EstimatedBudget = EstimatedBudget;
 
         // Handle file uploads — only update if new file provided
-        var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "commissions", userId.ToString());
-        Directory.CreateDirectory(uploadDir);
+        var uploadDir2 = Path.Combine(_env.WebRootPath, "uploads", "commissions", userId.ToString());
+        Directory.CreateDirectory(uploadDir2);
 
         if (CharacterSheet != null)
         {
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(CharacterSheet.FileName)}";
-            var filePath = Path.Combine(uploadDir, fileName);
+            var filePath = Path.Combine(uploadDir2, fileName);
             using var stream = new FileStream(filePath, FileMode.Create);
             await CharacterSheet.CopyToAsync(stream);
             commission.CharacterSheetPath = $"/uploads/commissions/{userId}/{fileName}";
@@ -155,7 +220,7 @@ public class CommissionModel : PageModel
         if (ReferencePose != null)
         {
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(ReferencePose.FileName)}";
-            var filePath = Path.Combine(uploadDir, fileName);
+            var filePath = Path.Combine(uploadDir2, fileName);
             using var stream = new FileStream(filePath, FileMode.Create);
             await ReferencePose.CopyToAsync(stream);
             commission.ReferencePosePath = $"/uploads/commissions/{userId}/{fileName}";
@@ -164,7 +229,7 @@ public class CommissionModel : PageModel
         if (ReferenceBackground != null)
         {
             var fileName = $"{Guid.NewGuid()}{Path.GetExtension(ReferenceBackground.FileName)}";
-            var filePath = Path.Combine(uploadDir, fileName);
+            var filePath = Path.Combine(uploadDir2, fileName);
             using var stream = new FileStream(filePath, FileMode.Create);
             await ReferenceBackground.CopyToAsync(stream);
             commission.ReferenceBackgroundPath = $"/uploads/commissions/{userId}/{fileName}";
@@ -253,6 +318,9 @@ public class CommissionModel : PageModel
                 await file.CopyToAsync(stream);
                 var savedPath = $"/uploads/commissions/{userId}/{fileName}";
 
+                // Store file path in CustomFieldsJson for dynamic viewing
+                fieldValues[file.Name] = savedPath;
+
                 var fieldName = file.Name.ToLower();
                 if (fieldName.Contains("sheet") || fieldName.Contains("character"))
                     characterSheetPath = savedPath;
@@ -268,6 +336,9 @@ public class CommissionModel : PageModel
                     refBgPath = savedPath;
             }
         }
+
+        // Update customJson with file paths included
+        customJson = JsonSerializer.Serialize(fieldValues);
 
         var now = DateTime.Now;
         var commission = new Commission
@@ -301,6 +372,22 @@ public class CommissionModel : PageModel
 
         TempData["Success"] = "true";
         return RedirectToPage("/Commission");
+    }
+
+    public IActionResult OnGetMessages(int commissionId, int lastId)
+    {
+        var messages = _db.ChatMessages
+            .Where(m => m.CommissionId == commissionId && m.Id > lastId)
+            .OrderBy(m => m.SentAt)
+            .Select(m => new {
+                m.Id,
+                m.Message,
+                m.IsArtist,
+                m.SenderUsername,
+                Time = (DateTime.Now - m.SentAt).TotalHours < 24 ? m.SentAt.ToString("h:mm tt") : m.SentAt.ToString("dd/MM/yyyy")
+            })
+            .ToList();
+        return new JsonResult(messages);
     }
 
     public IActionResult OnGetTemplate()

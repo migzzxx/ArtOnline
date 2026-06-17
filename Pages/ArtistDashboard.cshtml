@@ -37,8 +37,8 @@
                     <span class="material-symbols-rounded">filter_list</span>
                 </div>
                 <div class="dat">
-                    <p>@DateTime.Now.ToString("h:mm tt")</p>
-                    <p>@DateTime.Now.ToString("MMMM dd, yyyy")</p>
+                    <p id="liveTime">@DateTime.Now.ToString("h:mm tt")</p>
+                    <p id="liveDate">@DateTime.Now.ToString("MMMM dd, yyyy")</p>
                 </div>
             </div>
             <div class="wrap">
@@ -71,6 +71,7 @@
                     </div>
                 </div>
                 <div class="inside">
+                    <div style="flex:1;"></div>
                     @foreach (var review in Model.AllReviews)
                     {
                         var timeDiff = DateTime.Now - review.SentAt;
@@ -94,7 +95,7 @@
             <div class="right">
                 <div class="rt">
                     <h1>Recent Activities</h1>
-                    <div style="overflow-y:auto; flex:1; min-height:0;">
+                    <div style="overflow-y:auto; overflow-x:hidden; flex:1; min-height:0;">
                         @foreach (var c in Model.RecentActivities)
                         {
                             <div class="queue">
@@ -161,6 +162,24 @@
             <a href="">developers&#64;gmail.com</a>
         </div>
     </div>
+<script>
+    // Live clock update every second
+    function updateClock() {
+        const now = new Date();
+        let h = now.getHours();
+        const m = now.getMinutes().toString().padStart(2, '0');
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        document.getElementById('liveTime').textContent = h + ':' + m + ' ' + ampm;
+
+        const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+        const day = now.getDate().toString().padStart(2, '0');
+        document.getElementById('liveDate').textContent = months[now.getMonth()] + ' ' + day + ', ' + now.getFullYear();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+</script>
+
 </body>
 
 </html>

@@ -80,4 +80,20 @@ public class ArtistCommissionModel : PageModel
         }
         return RedirectToPage("/ArtistCommission", new { commissionId = CommissionId });
     }
+
+    public IActionResult OnGetMessages(int commissionId, int lastId)
+    {
+        var messages = _db.ChatMessages
+            .Where(m => m.CommissionId == commissionId && m.Id > lastId)
+            .OrderBy(m => m.SentAt)
+            .Select(m => new {
+                m.Id,
+                m.Message,
+                m.IsArtist,
+                m.SenderUsername,
+                Time = (DateTime.Now - m.SentAt).TotalHours < 24 ? m.SentAt.ToString("h:mm tt") : m.SentAt.ToString("dd/MM/yyyy")
+            })
+            .ToList();
+        return new JsonResult(messages);
+    }
 }

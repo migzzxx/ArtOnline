@@ -5,6 +5,14 @@ using ArtOnline.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 104857600; // 100MB
+    options.ValueLengthLimit = 10485760; // 10MB
+    options.ValueCountLimit = 2048;
+});
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 104857600);
+
 builder.Services.AddRazorPages();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=artonline.db"));
@@ -38,15 +46,15 @@ using (var scope = app.Services.CreateScope())
             {""id"":""f7"",""type"":""text"",""label"":""Subject"",""placeholder"":""Provide brief summary of your art request"",""required"":true},
             {""id"":""f8"",""type"":""file"",""label"":""Character Sheet (PNG/JPG)"",""required"":false},
             {""id"":""f9"",""type"":""text"",""label"":""Character Reference"",""placeholder"":""Name and describe the existing character/s for this artwork"",""required"":false},
-            {""id"":""f10"",""type"":""dropdown"",""label"":""Commission Type - Body"",""required"":true,""options"":[""Icon"",""Bust-Up"",""Half Body"",""Whole Body""]},
-            {""id"":""f11"",""type"":""dropdown"",""label"":""Commission Type - Persons"",""required"":true,""options"":[""One Person"",""Two"",""Three"",""More""]},
-            {""id"":""f12"",""type"":""dropdown"",""label"":""Commission Type - Style"",""required"":true,""options"":[""Sketch"",""Fully Rendered"",""Chibi""]},
+            {""id"":""f10"",""type"":""dropdown"",""label"":""Body Composition"",""required"":true,""options"":[""Icon"",""Bust-Up"",""Half Body"",""Whole Body""]},
+            {""id"":""f11"",""type"":""dropdown"",""label"":""Number of Characters"",""required"":true,""options"":[""One Person"",""Two"",""Three"",""Crowd""]},
+            {""id"":""f12"",""type"":""dropdown"",""label"":""Art Style"",""required"":true,""options"":[""Sketch"",""Fully Rendered"",""Chibi""]},
             {""id"":""f13"",""type"":""file"",""label"":""Reference Pose"",""required"":true},
             {""id"":""f14"",""type"":""file"",""label"":""Reference Background"",""required"":false},
-            {""id"":""f15"",""type"":""dropdown"",""label"":""Canvas Size"",""required"":true,""options"":[""1080x1080"",""1920x1080"",""2480x3508 (A4)"",""3508x2480 (A4 Landscape)"",""4000x4000"",""Other""]},
-            {""id"":""f16"",""type"":""text"",""label"":""Custom Canvas Size"",""placeholder"":""Enter custom size"",""required"":false},
+            {""id"":""f15"",""type"":""dropdown"",""label"":""Canvas Size"",""required"":true,""options"":[""Square (1:1)"",""Landscape (16:9)"",""A4 Portrait"",""A4 Landscape"",""Large Square (4000×4000)"",""Custom""]},
+            {""id"":""f16"",""type"":""text"",""label"":""Custom Canvas Size"",""placeholder"":""Leave blank if you selected a predefined canvas size above"",""required"":false},
             {""id"":""f17"",""type"":""textarea"",""label"":""Other Notes"",""placeholder"":""Provide any additional information"",""required"":false},
-            {""id"":""f18"",""type"":""subheader"",""label"":""Mode of Payment""},
+            {""id"":""f18"",""type"":""subheader"",""label"":""Payment Details""},
             {""id"":""f19"",""type"":""dropdown"",""label"":""Mode of Payment"",""required"":true,""options"":[""GCash"",""PayMaya"",""Game Credits""]},
             {""id"":""f20"",""type"":""text"",""label"":""Estimated Budget"",""placeholder"":""Enter your estimated budget"",""required"":true}
         ]";
