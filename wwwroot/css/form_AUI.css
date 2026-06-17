@@ -82,12 +82,18 @@ body {
             height: 35px;
             border-radius: 100px;
             cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        a:hover {
+            background-color: rgba(62, 74, 142, 0.15);
         }
         
         .form {
             background-color: #3E4A8E;
             color: white;
         }
+        .form:hover { background-color: #3E4A8E; color: white; }
     }
 }
 

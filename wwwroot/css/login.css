@@ -141,7 +141,9 @@ body {
         border-radius: 44px;
         cursor: pointer;
         margin-top: 5px;
+        transition: background-color 0.2s ease;
     }
+    .logbtn:hover { background-color: #2c3670; }
 
     .create {
         font-family: 'Inter', sans-serif;

@@ -91,11 +91,17 @@ body {
             height: 35px;
             border-radius: 100px;
             cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        a:hover {
+            background-color: rgba(220, 200, 99, 0.4);
         }
 
         .artist {
             background-color: #DCC863;
         }
+        .artist:hover { background-color: #DCC863; color: black; }
     }
 }
 
@@ -147,8 +153,7 @@ body {
                 font-family: 'Geom', sans-serif;
                 font-size: 2.6rem;
                 font-weight: 600;
-                color: white;
-                text-shadow: 0 4px 10px rgba(0, 0, 0, 0.467);
+                color: #1b1b1b;
             }
 
             .bullets {
@@ -158,13 +163,12 @@ body {
                 list-style-position: inside;
                 flex-direction: column;
                 gap: 8px;
-                color: white;
+                color: #1b1b1b;
                 font-size: large;
                 font-family: 'Geom';
             }
 
                 li {
-                    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.783);
                 }
                 
         }
@@ -180,9 +184,8 @@ body {
                 font-family: 'Geom', sans-serif;
                 font-size: 2.6rem;
                 font-weight: 600;
-                color: white;
+                color: #1b1b1b;
                 text-align: right;
-                text-shadow: 0 4px 10px rgba(0, 0, 0, 0.467);
             }
 
             .can-draw {
@@ -214,11 +217,10 @@ body {
 
                 li {
                     background-color: rgba(151, 141, 141, 0.123);
-                    color: white;
+                    color: #1b1b1b;
                     padding: 6px 10px;
                     font-weight: bold;
-                    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.467);
-                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.332);
+                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
                     font-size: large;
                 }
             }
@@ -288,6 +290,11 @@ body {
                             color: white;
                             text-align: right;
                             margin-top: 50px;
+                            transition: color 0.2s ease;
+                        }
+
+                        a:hover {
+                            color: #ECE57C;
                         }
                 }
             }
@@ -307,8 +314,8 @@ body {
                 font-weight: 600;
                 color: white;
                 display: block;
-                text-shadow: 0 4px 10px rgba(0, 0, 0, 0.467);
                 text-align: left;
+                text-shadow: 0 4px 10px rgba(0, 0, 0, 0.467);
             }
 
             .stairs {
@@ -327,11 +334,18 @@ body {
                     padding: 8px 16px;
                     border-radius: 10px;
                     width: fit-content;
-                    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.250);
+                    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
                     color: white;
                     display: inline-flex;
                     align-items: center;
                     gap: 5px;
+                    text-decoration: none;
+                    transition: background-color 0.2s ease;
+                    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.467);
+                }
+
+                a:hover {
+                    background-color: rgba(62, 74, 142, 0.1);
                 }
 
                 svg {

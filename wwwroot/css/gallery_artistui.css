@@ -82,12 +82,18 @@ body {
             height: 35px;
             border-radius: 100px;
             cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        a:hover {
+            background-color: rgba(62, 74, 142, 0.15);
         }
         
         .gallery {
             background-color: #3E4A8E;
             color: white;
         }
+        .gallery:hover { background-color: #3E4A8E; color: white; }
     }
 }
 
@@ -303,6 +309,7 @@ body {
 .like { z-index: 2; }
 
 .filter, .add { cursor: pointer; }
+.filter:hover, .add:hover { background-color: rgba(62, 74, 142, 0.1); transition: background-color 0.2s ease; }
 
 /* Tag chips */
 .tag-panel { display:none; padding:8px 25px; gap:8px; flex-wrap:wrap; flex-shrink:0; }
@@ -319,6 +326,8 @@ body {
     font-weight: 600;
 }
 .tag-chip.active { background: #3E4A8E; color: white; }
+.tag-chip:hover { background-color: rgba(62, 74, 142, 0.15); transition: background-color 0.2s ease; }
+.tag-chip.active:hover { background: #2c3670; }
 
 /* Gallery Modal */
 .gallery-modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; display:none; justify-content:center; align-items:center; }
@@ -332,8 +341,10 @@ body {
 .modal-right input[type="text"]:focus, .modal-right textarea:focus { border-color:#3E4A8E; }
 .modal-right textarea { height:60px; resize:none; }
 .modal-buttons { display:flex; justify-content:flex-end; gap:10px; margin-top:auto; padding-top:15px; position:absolute; bottom:25px; right:25px; }
-.btn-cancel { padding:8px 20px; border:2px solid #1b1b1b; background:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; }
-.btn-save { padding:8px 20px; border:none; background:#3E4A8E; color:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; box-shadow:0 3px 8px rgba(62,74,142,0.4); }
+.btn-cancel { padding:8px 20px; border:2px solid #1b1b1b; background:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition: background-color 0.2s ease; }
+.btn-cancel:hover { background-color: #f0f0f0; }
+.btn-save { padding:8px 20px; border:none; background:#3E4A8E; color:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; transition: background-color 0.2s ease; }
+.btn-save:hover { background-color: #2c3670; }
 
 .upload-area {
     width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;

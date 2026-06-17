@@ -82,11 +82,17 @@ body {
             height: 35px;
             border-radius: 100px;
             cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        a:hover {
+            background-color: rgba(220, 200, 99, 0.4);
         }
         
         .comm {
             background-color: #DCC863;
         }
+        .comm:hover { background-color: #DCC863; color: black; }
     }
 }
 

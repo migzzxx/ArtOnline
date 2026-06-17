@@ -91,11 +91,17 @@ body {
             height: 35px;
             border-radius: 100px;
             cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        a:hover {
+            background-color: rgba(220, 200, 99, 0.4);
         }
 
         .home {
             background-color: #DCC863;
         }
+        .home:hover { background-color: #DCC863; color: black; }
     }
 }
 
@@ -162,11 +168,21 @@ body {
                 .req {
                     background-color: #3e4a8e;
                     color: white;
+                    transition: background-color 0.2s ease;
+                }
+
+                .req:hover {
+                    background-color: #2c3670;
                 }
 
                 .view {
                     background-color: #1b1b1b;
                     color: white;
+                    transition: background-color 0.2s ease;
+                }
+
+                .view:hover {
+                    background-color: #3e4a8e;
                 }
             }
         }
@@ -287,6 +303,11 @@ body {
                         font-weight: 500;
                         color: #ECE57C;
                         text-align: right;
+                        transition: color 0.2s ease;
+                    }
+
+                    a:hover {
+                        color: white;
                     }
                 }
             }

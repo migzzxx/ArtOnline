@@ -97,11 +97,17 @@ body {
             height: 35px;
             border-radius: 100px;
             cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        a:hover {
+            background-color: rgba(220, 200, 99, 0.4);
         }
 
         .set {
             background-color: #DCC863;
         }
+        .set:hover { background-color: #DCC863; color: black; }
     }
 }
 
@@ -146,7 +152,23 @@ body {
                     font-size: 3rem;
                     font-weight: 700;
                     color: #1b1b1b;
-                }
+            }
+
+            .success-message {
+                font-family: 'Inter', sans-serif;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: #2e7d32;
+                padding: 8px 24px;
+            }
+
+            .error-message {
+                font-family: 'Inter', sans-serif;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: #9e3e3e;
+                padding: 8px 24px;
+            }
 
                 span {
                     font-size: 2.5rem;
@@ -216,7 +238,9 @@ body {
                         cursor: pointer;
                         right: 0;
                         box-shadow: 0 5px 5px rgba(0, 0, 0, 0.250);
+                        transition: background-color 0.2s ease;
                     }
+                    .save:hover { background-color: #2c3670; }
                 }
             }
 
@@ -325,6 +349,11 @@ body {
                     color: #ba0f0f;
                 }
 
+                .exit:hover {
+                    color: #ff0000;
+                    cursor: pointer;
+                }
+
                 a {
                     text-decoration: none;
                     color: inherit;
@@ -345,7 +374,9 @@ body {
                     justify-content: space-between;
                     border-bottom: 3px solid #000000;
                     padding-bottom: 5px;
-    
+                    transition: color 0.2s ease, border-color 0.2s ease;
+                    cursor: pointer;
+
                     span {
                         font-size: 2rem;
                         margin-top: 5px;
@@ -371,6 +402,11 @@ body {
 
                 a div {
                     width: 100%;
+                }
+
+                a:hover div {
+                    color: #3e4a8e !important;
+                    border-color: #3e4a8e !important;
                 }
             }
 

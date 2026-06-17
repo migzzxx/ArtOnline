@@ -18,6 +18,8 @@ public class SettingsModel : PageModel
 
     [BindProperty] public string Email { get; set; } = "";
     [BindProperty] public string Username { get; set; } = "";
+    [BindProperty] public string? LastName { get; set; }
+    [BindProperty] public string? FirstName { get; set; }
     [BindProperty] public int? Age { get; set; }
     [BindProperty] public string? Gender { get; set; }
 
@@ -35,6 +37,8 @@ public class SettingsModel : PageModel
 
         Email = user.Email;
         Username = user.Username;
+        LastName = user.LastName;
+        FirstName = user.FirstName;
         Age = user.Age;
         Gender = user.Gender;
     }
@@ -59,6 +63,8 @@ public class SettingsModel : PageModel
 
         user.Email = Email;
         user.Username = Username;
+        user.LastName = LastName;
+        user.FirstName = FirstName;
         user.Age = Age;
         user.Gender = Gender;
 
@@ -75,6 +81,8 @@ public class SettingsModel : PageModel
         // Load current values for display
         Email = user.Email;
         Username = user.Username;
+        LastName = user.LastName;
+        FirstName = user.FirstName;
         Age = user.Age;
         Gender = user.Gender;
 
