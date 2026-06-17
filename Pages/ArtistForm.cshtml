@@ -74,6 +74,18 @@
         <input type="hidden" name="fieldsData" id="fieldsDataInput" />
     </form>
 
+
+<!-- Confirm Action Modal -->
+<div id="confirmActionModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999999; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:12px; padding:20px 25px; min-width:300px; max-width:400px; box-shadow:0 10px 40px rgba(0,0,0,0.3); font-family:'Inter',sans-serif;">
+        <p id="confirmActionText" style="font-size:1rem; font-weight:600; color:#1b1b1b; margin-bottom:18px;"></p>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button id="confirmNo" type="button" style="padding:6px 20px; border:2px solid #1b1b1b; background:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; font-size:0.85rem;">Cancel</button>
+            <button id="confirmYes" type="button" style="padding:6px 20px; border:none; background:#3E4A8E; color:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; font-size:0.85rem;">OK</button>
+        </div>
+    </div>
+</div>
+
 <!-- Custom Modal -->
 <div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; display:none; justify-content:center; align-items:center;">
     <div style="background:white; border-radius:12px; padding:25px 30px; min-width:350px; max-width:450px; box-shadow:0 10px 40px rgba(0,0,0,0.3); font-family:'Inter',sans-serif;">
@@ -102,6 +114,20 @@
     </div>
 </div>
 
+
+
+<!-- Options Editor Modal -->
+<div id="optionsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:12px; padding:25px 30px; min-width:400px; max-width:500px; box-shadow:0 10px 40px rgba(0,0,0,0.3); font-family:'Inter',sans-serif;">
+        <p style="font-size:0.9rem; font-weight:600; color:#1b1b1b; margin-bottom:12px;" id="optionsModalLabel">Options</p>
+        <div id="optionsList" style="display:flex; flex-direction:column; gap:8px; max-height:250px; overflow-y:auto; margin-bottom:15px;"></div>
+        <button type="button" onclick="addOptionEntry()" style="background:none; border:1.5px dashed #3E4A8E; color:#3E4A8E; border-radius:8px; padding:6px 14px; font-size:0.85rem; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">+ Add Option</button>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+            <button id="optionsCancelBtn" type="button" style="padding:8px 20px; border:2px solid #1b1b1b; background:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">Cancel</button>
+            <button id="optionsSaveBtn" type="button" style="padding:8px 20px; border:none; background:#3E4A8E; color:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">Save</button>
+        </div>
+    </div>
+</div>
 
 <script>
     // Custom modal prompt function
@@ -154,6 +180,51 @@
             modal.style.display = 'flex';
             document.getElementById('statusSave').onclick = () => { modal.style.display = 'none'; resolve(isRequired); };
             document.getElementById('statusCancel').onclick = () => { modal.style.display = 'none'; resolve(null); };
+        });
+    }
+
+
+    // Options editor modal (for dropdown fields)
+    function showOptionsModal(currentOptions, label) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('optionsModal');
+            const list = document.getElementById('optionsList');
+            document.getElementById('optionsModalLabel').textContent = label || 'Edit Options';
+            
+            // Render current options
+            function renderOptions(opts) {
+                list.innerHTML = '';
+                opts.forEach((opt, i) => {
+                    const row = document.createElement('div');
+                    row.style.cssText = 'display:flex; align-items:center; gap:8px;';
+                    row.innerHTML = `<input type="text" value="${opt}" style="flex:1; padding:8px 12px; border:1.5px solid #d0d0d0; border-radius:8px; font-family:'Inter',sans-serif; font-size:0.9rem; outline:none;" class="opt-input">
+                        <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; color:#9e3e3e; font-size:1.2rem; font-weight:bold;">✕</button>`;
+                    list.appendChild(row);
+                });
+            }
+            renderOptions(currentOptions || []);
+            
+            window.addOptionEntry = function() {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex; align-items:center; gap:8px;';
+                row.innerHTML = `<input type="text" value="" placeholder="Enter option..." style="flex:1; padding:8px 12px; border:1.5px solid #d0d0d0; border-radius:8px; font-family:'Inter',sans-serif; font-size:0.9rem; outline:none;" class="opt-input">
+                    <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; color:#9e3e3e; font-size:1.2rem; font-weight:bold;">✕</button>`;
+                list.appendChild(row);
+                row.querySelector('input').focus();
+            };
+            
+            modal.style.display = 'flex';
+            
+            document.getElementById('optionsSaveBtn').onclick = () => {
+                const inputs = list.querySelectorAll('.opt-input');
+                const opts = Array.from(inputs).map(i => i.value.trim()).filter(v => v.length > 0);
+                modal.style.display = 'none';
+                resolve(opts);
+            };
+            document.getElementById('optionsCancelBtn').onclick = () => {
+                modal.style.display = 'none';
+                resolve(null);
+            };
         });
     }
 
@@ -242,6 +313,7 @@
             
             formPreview.appendChild(div);
         });
+        if (isEditing) updateSaveButtonState();
     }
 
     function enterEditMode() {
@@ -250,6 +322,7 @@
         editModeIcons.style.display = 'flex';
         componentsPanel.style.display = 'block';
         renderForm();
+        updateSaveButtonState();
     }
 
     function exitEditMode() {
@@ -260,16 +333,60 @@
         renderForm();
     }
 
+    // Track changes
+    function hasChanges() {
+        return JSON.stringify(fields) !== JSON.stringify(originalFields);
+    }
+
+    function updateSaveButtonState() {
+        if (hasChanges()) {
+            saveBtn.style.opacity = '1';
+            saveBtn.style.cursor = 'pointer';
+            saveBtn.style.pointerEvents = 'auto';
+        } else {
+            saveBtn.style.opacity = '0.35';
+            saveBtn.style.cursor = 'default';
+            saveBtn.style.pointerEvents = 'none';
+        }
+    }
+
+    // Confirm action modal
+    function showConfirmAction(message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('confirmActionModal');
+            document.getElementById('confirmActionText').textContent = message;
+            modal.style.display = 'flex';
+            document.getElementById('confirmYes').onclick = () => { modal.style.display = 'none'; resolve(true); };
+            document.getElementById('confirmNo').onclick = () => { modal.style.display = 'none'; resolve(false); };
+        });
+    }
+
     editBtn.addEventListener('click', enterEditMode);
 
-    discardBtn.addEventListener('click', () => {
+    discardBtn.addEventListener('click', async () => {
+        if (hasChanges()) {
+            const confirmed = await showConfirmAction('Discard Changes?');
+            if (!confirmed) return;
+        }
         fields = JSON.parse(JSON.stringify(originalFields));
         exitEditMode();
     });
 
-    saveBtn.addEventListener('click', () => {
-        document.getElementById('fieldsDataInput').value = JSON.stringify(fields);
-        document.getElementById('saveForm').submit();
+    saveBtn.addEventListener('click', async () => {
+        if (!hasChanges()) return;
+        const confirmed = await showConfirmAction('Save Changes?');
+        if (!confirmed) return;
+        const jsonData = JSON.stringify(fields);
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value || '';
+        const formData = new FormData();
+        formData.append('fieldsData', jsonData);
+        formData.append('__RequestVerificationToken', token);
+        fetch('/ArtistForm?handler=Save', {
+            method: 'POST',
+            body: formData
+        }).then(resp => {
+            window.location.href = '/ArtistForm';
+        });
     });
 
     async function editMainHeader(index) {
@@ -292,10 +409,9 @@
             const isRequired = await showFieldStatusModal(field.required);
             if (isRequired !== null) field.required = isRequired;
         } else if (field.type === 'dropdown') {
-            const currentOptions = (field.options || []).join(', ');
-            const newOptions = await modalPrompt('Edit options (comma-separated):', currentOptions);
+            const newOptions = await showOptionsModal(field.options || [], 'Edit Options');
             if (newOptions !== null) {
-                field.options = newOptions.split(',').map(o => o.trim()).filter(o => o.length > 0);
+                field.options = newOptions;
             }
             const isRequired = await showFieldStatusModal(field.required);
             if (isRequired !== null) field.required = isRequired;
@@ -342,9 +458,9 @@
             const label = await modalPrompt('Dropdown label:', '');
             if (!label) return;
             newField.label = label;
-            const options = await modalPrompt('Options (comma-separated):', '');
-            if (!options) return;
-            newField.options = options.split(',').map(o => o.trim()).filter(o => o.length > 0);
+            const options = await showOptionsModal([], 'Add Options');
+            if (!options || options.length === 0) return;
+            newField.options = options;
             const reqResult = await showFieldStatusModal(false);
             if (reqResult !== null) newField.required = reqResult;
         } else if (type === 'textarea') {

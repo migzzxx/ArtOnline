@@ -25,6 +25,7 @@ public class Commission
     public DateTime DateSubmitted { get; set; }
     public string TimeSubmitted { get; set; } = "";
     public int? FormTemplateVersion { get; set; }
+    public string? CustomFieldsJson { get; set; }
 
     public User? User { get; set; }
 }

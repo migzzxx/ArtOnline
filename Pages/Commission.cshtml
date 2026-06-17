@@ -327,142 +327,12 @@
                     </form>
                 }
 
-                @* === NEW COMMISSION FORM === *@
+                @* === NEW COMMISSION FORM (DYNAMIC) === *@
                 <form method="post" enctype="multipart/form-data" id="formContent" style="display: none;">
-                    <div class="form">
-                        <div class="fhead">
-                            <h1>Commission Request</h1>
-                            <p>Fill out the form below to submit your commission request. All required fields must be completed.</p>
-                        </div>
-                        <div class="cont">
-                            <h1>Contact Information</h1>
-                            <div class="inputs">
-                                <div class="input">
-                                    <p>Email Address <span style="color:red;">*</span></p>
-                                    <input type="text" class="box" name="Email" value="@Model.Email" required>
-                                </div>
-                                <div class="input">
-                                    <p>Contact Number <span style="color:red;">*</span></p>
-                                    <input type="tel" class="box" name="ContactNumber" id="contactNumber" value="@Model.ContactNumber" pattern="[0-9]*" required>
-                                </div>
-                                <div class="input">
-                                    <p>Social Account Link <span style="color:red;">*</span></p>
-                                    <input type="text" class="box" name="SocialAccountLink" value="@Model.SocialAccountLink" required>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="det">
-                            <h1>Art Details</h1>
-                            <div class="inputs">
-                                <div class="input">
-                                    <p>Rush Commission? <span style="color:red;">*</span></p>
-                                    <select name="RushCommission" required>
-                                        <option value="">-- Select --</option>
-                                        <option value="Yes">Yes</option>
-                                        <option value="No">No</option>
-                                    </select>
-                                </div>
-                                <div class="input">
-                                    <p>Subject <span style="color:red;">*</span></p>
-                                    <input type="text" placeholder="Provide brief summary of your art request" class="box" name="Subject" value="@Model.Subject" required>
-                                </div>
-                                <div class="input">
-                                    <p>Character Sheet (PNG/JPG)</p>
-                                    <label class="text">
-                                        <span class="placeholder">Upload a clear and detailed image of your OC/s (JPEG/PNG)</span>
-                                        <span class="material-symbols-rounded">upload</span>
-                                    </label>
-                                    <input type="file" accept="image/jpeg, image/png" class="file" name="CharacterSheet">
-                                </div>
-                                <div class="input">
-                                    <p>Character Reference</p>
-                                    <input type="text" placeholder="Name and describe the existing character/s for this artwork" class="box" name="CharacterReference">
-                                </div>
-                                <p>Commission Type <span style="color:red;">*</span></p>
-                                <div class="comwrap">
-                                    <div class="input">
-                                        <select name="CommissionType1" required>
-                                            <option value="">-- Body Type --</option>
-                                            <option value="Icon">Icon</option>
-                                            <option value="Bust-Up">Bust-Up</option>
-                                            <option value="Half Body">Half Body</option>
-                                            <option value="Whole Body">Whole Body</option>
-                                        </select>
-                                    </div>
-                                    <div class="input">
-                                        <select name="CommissionType2" required>
-                                            <option value="">-- Persons --</option>
-                                            <option value="One Person">One Person</option>
-                                            <option value="Two">Two</option>
-                                            <option value="Three">Three</option>
-                                            <option value="More">More</option>
-                                        </select>
-                                    </div>
-                                    <div class="input">
-                                        <select name="CommissionType3" required>
-                                            <option value="">-- Style --</option>
-                                            <option value="Sketch">Sketch</option>
-                                            <option value="Fully Rendered">Fully Rendered</option>
-                                            <option value="Chibi">Chibi</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="input">
-                                    <p>Reference Pose <span style="color:red;">*</span></p>
-                                    <label class="text">
-                                        <span class="placeholder">Upload reference pose image (JPEG/PNG)</span>
-                                        <span class="material-symbols-rounded">upload</span>
-                                    </label>
-                                    <input type="file" accept="image/jpeg, image/png" class="file" name="ReferencePose" required>
-                                </div>
-                                <div class="input">
-                                    <p>Reference Background (Optional)</p>
-                                    <label class="text">
-                                        <span class="placeholder">Upload reference background image (JPEG/PNG)</span>
-                                        <span class="material-symbols-rounded">upload</span>
-                                    </label>
-                                    <input type="file" accept="image/jpeg, image/png" class="file" name="ReferenceBackground">
-                                </div>
-                                <div class="input">
-                                    <p>Canvas Size <span style="color:red;">*</span></p>
-                                    <select name="CanvasSize" id="canvasSizeSelect" required>
-                                        <option value="">-- Select Size --</option>
-                                        <option value="1080x1080">1080 x 1080</option>
-                                        <option value="1920x1080">1920 x 1080</option>
-                                        <option value="2480x3508">2480 x 3508 (A4)</option>
-                                        <option value="3508x2480">3508 x 2480 (A4 Landscape)</option>
-                                        <option value="4000x4000">4000 x 4000</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                                <div class="input" id="customCanvasInput" style="display: none;">
-                                    <p>Custom Canvas Size</p>
-                                    <input type="text" placeholder="Enter your preferred size (e.g. 3000x2000)" class="box" name="CustomCanvasSize">
-                                </div>
-                                <div class="input">
-                                    <p>Other Notes</p>
-                                    <textarea class="box" name="OtherNotes" placeholder="Provide any additional information you want the artist to be aware of" rows="4" style="resize: vertical; min-height: 80px;">@Model.OtherNotes</textarea>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mop">
-                            <h1>Mode of Payment</h1>
-                            <div class="inputs">
-                                <div class="input">
-                                    <p>Payment Method <span style="color:red;">*</span></p>
-                                    <select name="ModeOfPayment" required>
-                                        <option value="">-- Select --</option>
-                                        <option value="GCash">GCash</option>
-                                        <option value="PayMaya">PayMaya</option>
-                                        <option value="Game Credits">Game Credits</option>
-                                    </select>
-                                </div>
-                                <div class="input">
-                                    <p>Estimated Budget <span style="color:red;">*</span></p>
-                                    <input type="text" placeholder="Enter your estimated budget" class="box" name="EstimatedBudget" required>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="form" id="dynamicForm"></div>
+                    <input type="hidden" name="CustomFieldsJson" id="customFieldsJson">
+                    <input type="hidden" name="FormTemplateVersion" value="@Model.CurrentTemplateVersion">
+                    <div class="form" style="padding:0 25px 25px 25px;">
                         <button type="submit" class="submit">Submit Commission</button>
                     </div>
                 </form>
@@ -483,6 +353,77 @@
     </div>
 
 <script>
+
+    // === DYNAMIC FORM RENDERING ===
+    let templateFields = @Html.Raw(Model.CurrentTemplateJson);
+
+    function renderNewCommissionForm() {
+        const container = document.getElementById('dynamicForm');
+        if (!container) return;
+        let html = '';
+        let inSection = false;
+
+        templateFields.forEach(field => {
+            switch(field.type) {
+                case 'mainheader':
+                    html += `<div class="fhead"><h1>${field.title}</h1><p>${field.description}</p></div>`;
+                    break;
+                case 'subheader':
+                    if (inSection) html += '</div></div>';
+                    html += `<div class="cont"><h1>${field.label}</h1><div class="inputs">`;
+                    inSection = true;
+                    break;
+                case 'text':
+                    html += `<div class="input"><p>${field.label}${field.required ? ' <span style="color:red;">*</span>' : ''}</p><input type="text" class="box" name="field_${field.id}" placeholder="${field.placeholder || ''}" ${field.required ? 'required' : ''}></div>`;
+                    break;
+                case 'file':
+                    html += `<div class="input"><p>${field.label}${field.required ? ' <span style="color:red;">*</span>' : ''}</p><label class="text" style="cursor:pointer;"><span class="placeholder">Upload image (JPEG/PNG)</span><span class="material-symbols-rounded">upload</span></label><input type="file" accept="image/jpeg,image/png" class="file" name="file_${field.id}"></div>`;
+                    break;
+                case 'dropdown':
+                    const opts = (field.options || []).map(o => `<option value="${o}">${o}</option>`).join('');
+                    html += `<div class="input"><p>${field.label}${field.required ? ' <span style="color:red;">*</span>' : ''}</p><select name="field_${field.id}" ${field.required ? 'required' : ''}><option value="">-- Select --</option>${opts}</select></div>`;
+                    break;
+                case 'textarea':
+                    html += `<div class="input"><p>${field.label}${field.required ? ' <span style="color:red;">*</span>' : ''}</p><textarea class="box" name="field_${field.id}" placeholder="${field.placeholder || ''}" style="height:80px;resize:none;" ${field.required ? 'required' : ''}></textarea></div>`;
+                    break;
+            }
+        });
+        if (inSection) html += '</div></div>';
+        container.innerHTML = html;
+
+        // Re-attach file label click handlers
+        container.querySelectorAll('label.text').forEach(label => {
+            label.addEventListener('click', () => {
+                const fileInput = label.nextElementSibling;
+                if (fileInput && fileInput.type === 'file') fileInput.click();
+            });
+        });
+        container.querySelectorAll('.file').forEach(input => {
+            input.addEventListener('change', function() {
+                const label = this.previousElementSibling;
+                if (label) {
+                    const placeholder = label.querySelector('.placeholder');
+                    if (placeholder && this.files.length > 0) placeholder.textContent = this.files[0].name;
+                }
+            });
+        });
+    }
+
+    // Render the form on page load
+    renderNewCommissionForm();
+
+    // On form submit, collect all field values into JSON
+    const formContent = document.getElementById('formContent');
+    if (formContent) {
+        formContent.addEventListener('submit', function(e) {
+            const fields = {};
+            this.querySelectorAll('[name^="field_"]').forEach(el => {
+                fields[el.name] = el.value;
+            });
+            document.getElementById('customFieldsJson').value = JSON.stringify(fields);
+        });
+    }
+
     // Commission filter icons
     const filterProgress = document.getElementById('filterProgress');
     const filterCheck = document.getElementById('filterCheck');
@@ -540,7 +481,7 @@
     applyFilter();
 
     // Toggle new form visibility (hides viewing commission when + is clicked)
-    document.getElementById('toggleFormBtn').addEventListener('click', () => {
+    document.getElementById('toggleFormBtn').addEventListener('click', async () => {
         const form = document.getElementById('formContent');
         const viewForm = document.getElementById('viewForm');
         // Hide edit button
@@ -548,6 +489,14 @@
         if (editBtn) editBtn.style.display = 'none';
         if (viewForm) viewForm.style.display = 'none';
         if (form.style.display === 'none') {
+            // Fetch latest template from server (no reload needed)
+            try {
+                const resp = await fetch('/Commission?handler=Template');
+                const data = await resp.json();
+                templateFields = JSON.parse(data.fields);
+                document.querySelector('input[name="FormTemplateVersion"]').value = data.version;
+                renderNewCommissionForm();
+            } catch(e) { console.error('Failed to fetch template', e); }
             form.style.display = 'block';
             // Clear the chat when opening new form
             const chatArea = document.getElementById('chatArea');

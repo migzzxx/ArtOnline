@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -26,6 +27,8 @@ public class CommissionModel : PageModel
     public bool IsEditing { get; set; }
     public bool ShowSuccess { get; set; }
     public bool IsCommissionOpen { get; set; } = true;
+    public string CurrentTemplateJson { get; set; } = "[]";
+    public int CurrentTemplateVersion { get; set; }
 
     [BindProperty] public string Email { get; set; } = "";
     [BindProperty] public string ContactNumber { get; set; } = "";
@@ -61,6 +64,14 @@ public class CommissionModel : PageModel
         // Check commission status (open/closed)
         var commStatus = _db.CommissionStatuses.FirstOrDefault();
         IsCommissionOpen = commStatus == null || commStatus.IsOpen;
+
+        // Load current form template
+        var template = _db.FormTemplates.FirstOrDefault(t => t.IsCurrent);
+        if (template != null)
+        {
+            CurrentTemplateJson = template.FieldsJson;
+            CurrentTemplateVersion = template.Version;
+        }
 
         // Load selected commission for viewing/editing
         if (commissionId.HasValue && Commissions.Any(c => c.Id == commissionId.Value))
@@ -166,133 +177,123 @@ public class CommissionModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+        var template = _db.FormTemplates.FirstOrDefault(t => t.IsCurrent);
 
-        // Validate required fields
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(ContactNumber) || string.IsNullOrWhiteSpace(SocialAccountLink))
+        // Get the custom fields JSON from the form
+        var customJson = Request.Form["CustomFieldsJson"].ToString();
+        var fieldValues = new Dictionary<string, string>();
+        if (!string.IsNullOrWhiteSpace(customJson))
         {
-            ErrorMessage = "All contact information fields are required.";
-            Commissions = _db.Commissions.Where(c => c.UserId == userId).OrderByDescending(c => c.DateSubmitted).ToList();
-            return Page();
+            fieldValues = JsonSerializer.Deserialize<Dictionary<string, string>>(customJson) ?? new();
         }
 
-        if (!ContactNumber.All(char.IsDigit))
+        // Load template fields to map by label
+        var templateFieldsList = new List<Dictionary<string, JsonElement>>();
+        if (template != null)
         {
-            ErrorMessage = "Contact number must contain only numbers.";
-            Commissions = _db.Commissions.Where(c => c.UserId == userId).OrderByDescending(c => c.DateSubmitted).ToList();
-            return Page();
+            templateFieldsList = JsonSerializer.Deserialize<List<Dictionary<string, JsonElement>>>(template.FieldsJson) ?? new();
         }
 
-        if (string.IsNullOrWhiteSpace(Subject))
+        string GetValueByLabel(string labelContains)
+        {
+            foreach (var tf in templateFieldsList)
+            {
+                if (tf.ContainsKey("label") && tf["label"].GetString()?.ToLower().Contains(labelContains.ToLower()) == true)
+                {
+                    var fieldId = tf.ContainsKey("id") ? tf["id"].GetString() ?? "" : "";
+                    var key = "field_" + fieldId;
+                    if (fieldValues.ContainsKey(key)) return fieldValues[key];
+                }
+            }
+            return "";
+        }
+
+        // Extract known fields for backward compatibility
+        var email = GetValueByLabel("email address") != "" ? GetValueByLabel("email address") : GetValueByLabel("email");
+        var contactNumber = GetValueByLabel("contact");
+        var socialLink = GetValueByLabel("social");
+        var subject = GetValueByLabel("subject");
+        var rushCommission = GetValueByLabel("rush");
+        var commType1 = GetValueByLabel("body");
+        var commType2 = GetValueByLabel("person");
+        var commType3 = GetValueByLabel("style");
+        var canvasSize = GetValueByLabel("canvas");
+        var modeOfPayment = GetValueByLabel("payment");
+        var estimatedBudget = GetValueByLabel("budget");
+        var characterRef = GetValueByLabel("character ref");
+        var otherNotes = GetValueByLabel("note");
+
+        // Basic validation
+        if (string.IsNullOrWhiteSpace(subject))
         {
             ErrorMessage = "Subject is required.";
             Commissions = _db.Commissions.Where(c => c.UserId == userId).OrderByDescending(c => c.DateSubmitted).ToList();
+            CurrentTemplateJson = template?.FieldsJson ?? "[]";
+            CurrentTemplateVersion = template?.Version ?? 1;
+            var cs = _db.CommissionStatuses.FirstOrDefault();
+            IsCommissionOpen = cs == null || cs.IsOpen;
             return Page();
         }
 
-        if (CharacterSheet == null && string.IsNullOrWhiteSpace(CharacterReference))
-        {
-            ErrorMessage = "Please provide either a Character Sheet upload or a Character Reference description.";
-            Commissions = _db.Commissions.Where(c => c.UserId == userId).OrderByDescending(c => c.DateSubmitted).ToList();
-            return Page();
-        }
-
-        if (string.IsNullOrWhiteSpace(CommissionType1) || string.IsNullOrWhiteSpace(CommissionType2) || string.IsNullOrWhiteSpace(CommissionType3))
-        {
-            ErrorMessage = "All three commission type fields are required.";
-            Commissions = _db.Commissions.Where(c => c.UserId == userId).OrderByDescending(c => c.DateSubmitted).ToList();
-            return Page();
-        }
-
-        if (ReferencePose == null)
-        {
-            ErrorMessage = "Reference Pose is required.";
-            Commissions = _db.Commissions.Where(c => c.UserId == userId).OrderByDescending(c => c.DateSubmitted).ToList();
-            return Page();
-        }
-
-        if (string.IsNullOrWhiteSpace(CanvasSize))
-        {
-            ErrorMessage = "Canvas Size is required.";
-            Commissions = _db.Commissions.Where(c => c.UserId == userId).OrderByDescending(c => c.DateSubmitted).ToList();
-            return Page();
-        }
-
-        if (CanvasSize == "Other" && string.IsNullOrWhiteSpace(CustomCanvasSize))
-        {
-            ErrorMessage = "Please specify your custom canvas size.";
-            Commissions = _db.Commissions.Where(c => c.UserId == userId).OrderByDescending(c => c.DateSubmitted).ToList();
-            return Page();
-        }
-
-        if (string.IsNullOrWhiteSpace(ModeOfPayment))
-        {
-            ErrorMessage = "Mode of Payment is required.";
-            Commissions = _db.Commissions.Where(c => c.UserId == userId).OrderByDescending(c => c.DateSubmitted).ToList();
-            return Page();
-        }
-
-        if (string.IsNullOrWhiteSpace(EstimatedBudget))
-        {
-            ErrorMessage = "Estimated Budget is required.";
-            Commissions = _db.Commissions.Where(c => c.UserId == userId).OrderByDescending(c => c.DateSubmitted).ToList();
-            return Page();
-        }
-
-        // Save uploaded files
+        // Handle file uploads
         var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "commissions", userId.ToString());
         Directory.CreateDirectory(uploadDir);
 
         string? characterSheetPath = null;
-        if (CharacterSheet != null)
-        {
-            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(CharacterSheet.FileName)}";
-            var filePath = Path.Combine(uploadDir, fileName);
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await CharacterSheet.CopyToAsync(stream);
-            characterSheetPath = $"/uploads/commissions/{userId}/{fileName}";
-        }
-
-        var refPoseFileName = $"{Guid.NewGuid()}{Path.GetExtension(ReferencePose.FileName)}";
-        var refPosePath = Path.Combine(uploadDir, refPoseFileName);
-        using (var stream = new FileStream(refPosePath, FileMode.Create))
-        {
-            await ReferencePose.CopyToAsync(stream);
-        }
-
+        string refPosePath = "";
         string? refBgPath = null;
-        if (ReferenceBackground != null)
+
+        foreach (var file in Request.Form.Files)
         {
-            var bgFileName = $"{Guid.NewGuid()}{Path.GetExtension(ReferenceBackground.FileName)}";
-            var bgFilePath = Path.Combine(uploadDir, bgFileName);
-            using var stream = new FileStream(bgFilePath, FileMode.Create);
-            await ReferenceBackground.CopyToAsync(stream);
-            refBgPath = $"/uploads/commissions/{userId}/{bgFileName}";
+            if (file.Length > 0)
+            {
+                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                var filePath = Path.Combine(uploadDir, fileName);
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await file.CopyToAsync(stream);
+                var savedPath = $"/uploads/commissions/{userId}/{fileName}";
+
+                var fieldName = file.Name.ToLower();
+                if (fieldName.Contains("sheet") || fieldName.Contains("character"))
+                    characterSheetPath = savedPath;
+                else if (fieldName.Contains("pose") || fieldName.Contains("reference pose"))
+                    refPosePath = savedPath;
+                else if (fieldName.Contains("background"))
+                    refBgPath = savedPath;
+                else if (string.IsNullOrEmpty(characterSheetPath))
+                    characterSheetPath = savedPath;
+                else if (string.IsNullOrEmpty(refPosePath))
+                    refPosePath = savedPath;
+                else
+                    refBgPath = savedPath;
+            }
         }
 
         var now = DateTime.Now;
         var commission = new Commission
         {
             UserId = userId,
-            Email = Email,
-            ContactNumber = ContactNumber,
-            SocialAccountLink = SocialAccountLink,
-            RushCommission = RushCommission == "Yes",
-            Subject = Subject,
+            Email = email,
+            ContactNumber = contactNumber,
+            SocialAccountLink = socialLink,
+            RushCommission = rushCommission.ToLower() == "yes",
+            Subject = subject,
             CharacterSheetPath = characterSheetPath,
-            CharacterReference = CharacterReference,
-            CommissionType1 = CommissionType1,
-            CommissionType2 = CommissionType2,
-            CommissionType3 = CommissionType3,
-            ReferencePosePath = $"/uploads/commissions/{userId}/{refPoseFileName}",
+            CharacterReference = string.IsNullOrWhiteSpace(characterRef) ? null : characterRef,
+            CommissionType1 = commType1,
+            CommissionType2 = commType2,
+            CommissionType3 = commType3,
+            ReferencePosePath = refPosePath,
             ReferenceBackgroundPath = refBgPath,
-            CanvasSize = CanvasSize == "Other" ? CustomCanvasSize ?? "" : CanvasSize,
-            OtherNotes = OtherNotes,
-            ModeOfPayment = ModeOfPayment,
-            EstimatedBudget = EstimatedBudget,
+            CanvasSize = canvasSize,
+            OtherNotes = string.IsNullOrWhiteSpace(otherNotes) ? null : otherNotes,
+            ModeOfPayment = modeOfPayment,
+            EstimatedBudget = estimatedBudget,
             Status = "Pending",
             DateSubmitted = now,
             TimeSubmitted = now.ToString("h:mm tt"),
-            FormTemplateVersion = _db.FormTemplates.Where(t => t.IsCurrent).Select(t => t.Version).FirstOrDefault()
+            FormTemplateVersion = template?.Version ?? 1,
+            CustomFieldsJson = customJson
         };
 
         _db.Commissions.Add(commission);
@@ -300,5 +301,15 @@ public class CommissionModel : PageModel
 
         TempData["Success"] = "true";
         return RedirectToPage("/Commission");
+    }
+
+    public IActionResult OnGetTemplate()
+    {
+        var template = _db.FormTemplates.FirstOrDefault(t => t.IsCurrent);
+        if (template != null)
+        {
+            return new JsonResult(new { fields = template.FieldsJson, version = template.Version });
+        }
+        return new JsonResult(new { fields = "[]", version = 0 });
     }
 }
