@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ArtOnline")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+99a11d758975067d33a80d5c6d8de8b9e0c8507c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+98a86e45e5f2b78776900f315e37ce95050d9210")]
 [assembly: System.Reflection.AssemblyProductAttribute("ArtOnline")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ArtOnline")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -12,10 +12,12 @@ namespace ArtOnline.Pages;
 public class ArtistCommissionModel : PageModel
 {
     private readonly AppDbContext _db;
+    private readonly IWebHostEnvironment _env;
 
-    public ArtistCommissionModel(AppDbContext db)
+    public ArtistCommissionModel(AppDbContext db, IWebHostEnvironment env)
     {
         _db = db;
+        _env = env;
     }
 
     public List<Commission> AllCommissions { get; set; } = new();
@@ -81,6 +83,69 @@ public class ArtistCommissionModel : PageModel
         return RedirectToPage("/ArtistCommission", new { commissionId = CommissionId });
     }
 
+    public async Task<IActionResult> OnPostUploadFinalOutputAsync(int CommissionId, IFormFile FinalOutput)
+    {
+        var commission = await _db.Commissions.FindAsync(CommissionId);
+        if (commission == null || commission.Status != "Working") 
+            return RedirectToPage("/ArtistCommission", new { commissionId = CommissionId });
+
+        if (FinalOutput != null && FinalOutput.Length > 0)
+        {
+            var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "commissions", "final");
+            Directory.CreateDirectory(uploadDir);
+            var fileName = $"{Guid.NewGuid()}{Path.GetExtension(FinalOutput.FileName)}";
+            var filePath = Path.Combine(uploadDir, fileName);
+            using var stream = new FileStream(filePath, FileMode.Create);
+            await FinalOutput.CopyToAsync(stream);
+            commission.FinalOutputPath = $"/uploads/commissions/final/{fileName}";
+            await _db.SaveChangesAsync();
+        }
+
+        return RedirectToPage("/ArtistCommission", new { commissionId = CommissionId });
+    }
+
+    public async Task<IActionResult> OnPostRemoveFinalOutputAsync(int CommissionId)
+    {
+        var commission = await _db.Commissions.FindAsync(CommissionId);
+        if (commission != null && commission.Status == "Working")
+        {
+            commission.FinalOutputPath = null;
+            await _db.SaveChangesAsync();
+        }
+        return RedirectToPage("/ArtistCommission", new { commissionId = CommissionId });
+    }
+
+
+    public async Task<IActionResult> OnPostSendImageAsync()
+    {
+        var commissionId = int.Parse(Request.Form["CommissionId"]);
+        var file = Request.Form.Files.FirstOrDefault();
+        if (file == null || file.Length == 0) return new JsonResult(new { success = false });
+
+        var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "chat");
+        Directory.CreateDirectory(uploadDir);
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        var filePath = Path.Combine(uploadDir, fileName);
+        using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
+        var savedPath = $"/uploads/chat/{fileName}";
+
+        var msg = new ChatMessage
+        {
+            CommissionId = commissionId,
+            SenderId = 0,
+            SenderUsername = "Amoreivc",
+            IsArtist = true,
+            Message = file.FileName,
+            ImagePath = savedPath,
+            SentAt = DateTime.Now
+        };
+        _db.ChatMessages.Add(msg);
+        await _db.SaveChangesAsync();
+
+        return new JsonResult(new { success = true, id = msg.Id, message = msg.Message, imagePath = savedPath, isArtist = true, time = msg.SentAt.ToString("h:mm tt") });
+    }
+
     public IActionResult OnGetMessages(int commissionId, int lastId)
     {
         var messages = _db.ChatMessages
@@ -91,6 +156,7 @@ public class ArtistCommissionModel : PageModel
                 m.Message,
                 m.IsArtist,
                 m.SenderUsername,
+                m.ImagePath,
                 Time = (DateTime.Now - m.SentAt).TotalHours < 24 ? m.SentAt.ToString("h:mm tt") : m.SentAt.ToString("dd/MM/yyyy")
             })
             .ToList();

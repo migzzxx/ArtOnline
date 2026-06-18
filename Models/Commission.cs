@@ -26,6 +26,7 @@ public class Commission
     public string TimeSubmitted { get; set; } = "";
     public int? FormTemplateVersion { get; set; }
     public string? CustomFieldsJson { get; set; }
+    public string? FinalOutputPath { get; set; }
 
     public User? User { get; set; }
 }

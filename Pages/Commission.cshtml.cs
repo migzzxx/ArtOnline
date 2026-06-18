@@ -181,7 +181,7 @@ public class CommissionModel : PageModel
                 commission.Subject = GetVal("subject") != "" ? GetVal("subject") : commission.Subject;
                 commission.RushCommission = GetVal("rush").ToLower() == "yes";
                 commission.CommissionType1 = GetVal("body") != "" ? GetVal("body") : commission.CommissionType1;
-                commission.CommissionType2 = GetVal("character") != "" ? GetVal("character") : (GetVal("person") != "" ? GetVal("person") : commission.CommissionType2);
+                commission.CommissionType2 = GetVal("number of characters") != "" ? GetVal("number of characters") : (GetVal("person") != "" ? GetVal("person") : commission.CommissionType2);
                 commission.CommissionType3 = GetVal("style") != "" ? GetVal("style") : commission.CommissionType3;
             }
 
@@ -280,7 +280,7 @@ public class CommissionModel : PageModel
         var subject = GetValueByLabel("subject");
         var rushCommission = GetValueByLabel("rush");
         var commType1 = GetValueByLabel("body");
-        var commType2 = GetValueByLabel("person");
+        var commType2 = GetValueByLabel("number of characters") != "" ? GetValueByLabel("number of characters") : GetValueByLabel("person");
         var commType3 = GetValueByLabel("style");
         var canvasSize = GetValueByLabel("canvas");
         var modeOfPayment = GetValueByLabel("payment");
@@ -374,6 +374,40 @@ public class CommissionModel : PageModel
         return RedirectToPage("/Commission");
     }
 
+
+    public async Task<IActionResult> OnPostSendImageAsync()
+    {
+        var commissionId = int.Parse(Request.Form["CommissionId"]);
+        var file = Request.Form.Files.FirstOrDefault();
+        if (file == null || file.Length == 0) return new JsonResult(new { success = false });
+
+        var userId = int.Parse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value);
+        var user = _db.Users.Find(userId);
+
+        var uploadDir = Path.Combine(_env.WebRootPath, "uploads", "chat");
+        Directory.CreateDirectory(uploadDir);
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        var filePath = Path.Combine(uploadDir, fileName);
+        using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
+        var savedPath = $"/uploads/chat/{fileName}";
+
+        var msg = new ChatMessage
+        {
+            CommissionId = commissionId,
+            SenderId = userId,
+            SenderUsername = user?.Username ?? "User",
+            IsArtist = false,
+            Message = file.FileName,
+            ImagePath = savedPath,
+            SentAt = DateTime.Now
+        };
+        _db.ChatMessages.Add(msg);
+        await _db.SaveChangesAsync();
+
+        return new JsonResult(new { success = true, id = msg.Id, message = msg.Message, imagePath = savedPath, isArtist = false, time = msg.SentAt.ToString("h:mm tt") });
+    }
+
     public IActionResult OnGetMessages(int commissionId, int lastId)
     {
         var messages = _db.ChatMessages
@@ -383,6 +417,7 @@ public class CommissionModel : PageModel
                 m.Id,
                 m.Message,
                 m.IsArtist,
+                m.ImagePath,
                 m.SenderUsername,
                 Time = (DateTime.Now - m.SentAt).TotalHours < 24 ? m.SentAt.ToString("h:mm tt") : m.SentAt.ToString("dd/MM/yyyy")
             })

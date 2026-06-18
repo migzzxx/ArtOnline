@@ -94,7 +94,14 @@
                         var bubbleClass = msg.IsArtist ? "self" : "other";
                         <div class="chat @bubbleClass" data-msg-id="@msg.Id">
                             <span class="user">@displayName</span>
-                            <div class="bubble">@msg.Message</div>
+                            @if (!string.IsNullOrEmpty(msg.ImagePath))
+                            {
+                                <div class="bubble" style="cursor:pointer;" onclick="showImagePreviewUrl('@msg.ImagePath')">📷 @msg.Message</div>
+                            }
+                            else
+                            {
+                                <div class="bubble">@msg.Message</div>
+                            }
                             <span class="time">@timeDisplay</span>
                         </div>
                     }
@@ -104,10 +111,12 @@
                     <form method="post" asp-page-handler="SendMessage" class="input-group">
                         <input type="hidden" name="SelectedCommissionId" value="@Model.SelectedCommissionId" />
                         <input type="text" name="ChatMessageText" placeholder="Type a message..." required />
+                        <button type="button" onclick="document.getElementById('chatImageInput').click()" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; padding:0 5px;"><span class="material-symbols-rounded" style="font-size:1.4rem; color:#888;">image</span></button>
                         <button type="submit" class="send">
                             <span class="material-symbols-rounded">send</span>
                         </button>
                     </form>
+                    <input type="file" id="chatImageInput" accept="image/jpeg,image/png" style="display:none;" onchange="showChatImageConfirm(this)" />
                 }
             </div>
         </div>
@@ -138,7 +147,7 @@
                             else if (Model.ViewingCommission.Status == "Working")
                             {
                                 <input type="hidden" name="NewStatus" value="Completed" />
-                                <button type="button" onclick="showStatusModal('Completed')" style="background:none; border:none; cursor:pointer; display:flex; align-items:center;" title="Change to Completed">
+                                <button type="button" id="completeBtn" onclick="showStatusModal('Completed')" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; @(string.IsNullOrEmpty(Model.ViewingCommission.FinalOutputPath) ? "opacity:0.35; pointer-events:none;" : "")" title="Change to Completed">
                                     <span class="material-symbols-rounded" style="font-size:1.8rem;">edit</span>
                                 </button>
                             }
@@ -293,6 +302,55 @@
                                     <input type="text" class="box" value="@vc.EstimatedBudget" disabled>
                                 </div>
                             </div>
+
+                            @* === FINAL OUTPUT SECTION === *@
+                            @if (vc.Status == "Working" || vc.Status == "Completed")
+                            {
+                                <div class="cont">
+                                    <h1>Final Output</h1>
+                                    <div class="inputs">
+                                        <div class="input">
+                                            <p>Final Output Image</p>
+                                            @if (vc.Status == "Working")
+                                            {
+                                                @if (!string.IsNullOrEmpty(vc.FinalOutputPath))
+                                                {
+                                                    <div style="display:flex; align-items:center; gap:10px;">
+                                                        <div class="box file-preview" style="cursor:pointer; flex:1;" onclick="showImagePreviewUrl('@vc.FinalOutputPath')">@System.IO.Path.GetFileName(vc.FinalOutputPath)</div>
+                                                        <form method="post" asp-page-handler="RemoveFinalOutput" style="display:inline;">
+                                                            <input type="hidden" name="CommissionId" value="@vc.Id" />
+                                                            <button type="submit" style="background:none; border:none; cursor:pointer; color:#9e3e3e; font-weight:700; font-size:1.2rem;">✕</button>
+                                                        </form>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <form method="post" asp-page-handler="UploadFinalOutput" enctype="multipart/form-data" id="finalOutputForm">
+                                                        <input type="hidden" name="CommissionId" value="@vc.Id" />
+                                                        <div class="text" id="finalOutputLabel" style="cursor:pointer; position:relative;" onclick="document.getElementById('finalOutputFile').click()">
+                                                            <span class="placeholder">Click to upload final output</span>
+                                                            <span class="material-symbols-rounded">upload</span>
+                                                        </div>
+                                                        <input type="file" accept="image/jpeg,image/png" class="file" name="FinalOutput" id="finalOutputFile" onchange="document.getElementById('finalOutputForm').submit()">
+                                                    </form>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                @* Completed - view only *@
+                                                @if (!string.IsNullOrEmpty(vc.FinalOutputPath))
+                                                {
+                                                    <div class="box file-preview" style="cursor:pointer;" onclick="showImagePreviewUrl('@vc.FinalOutputPath')">@System.IO.Path.GetFileName(vc.FinalOutputPath)</div>
+                                                }
+                                                else
+                                                {
+                                                    <input type="text" class="box" value="No file" disabled>
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </div>
                 }
@@ -327,6 +385,22 @@
         document.body.appendChild(overlay);
     }
 
+
+    // Save scroll position before final output form actions
+    document.querySelectorAll('.midr form').forEach(form => {
+        form.addEventListener('submit', () => {
+            const wrap = document.querySelector('.midr .wrap');
+            if (wrap) sessionStorage.setItem('artistCommScroll', wrap.scrollTop);
+        });
+    });
+
+    // Restore scroll position on page load
+    const savedScroll = sessionStorage.getItem('artistCommScroll');
+    if (savedScroll !== null) {
+        const wrap = document.querySelector('.midr .wrap') || document.querySelector('.wrap');
+        if (wrap) setTimeout(() => { wrap.scrollTop = parseInt(savedScroll); }, 50);
+        sessionStorage.removeItem('artistCommScroll');
+    }
     // Commission filter icons
     const filterProgress = document.getElementById('filterProgress');
     const filterCheck = document.getElementById('filterCheck');
@@ -426,7 +500,8 @@
                         const div = document.createElement('div');
                         div.className = 'chat ' + bubbleClass;
                         div.dataset.msgId = msg.id;
-                        div.innerHTML = `<span class="user">${displayName}</span><div class="bubble">${msg.message}</div><span class="time">${msg.time}</span>`;
+                        const msgContent = msg.imagePath ? `<div class="bubble" style="cursor:pointer;" onclick="showImagePreviewUrl('${msg.imagePath}')">📷 ${msg.message}</div>` : `<div class="bubble">${msg.message}</div>`;
+                    div.innerHTML = `<span class="user">${displayName}</span>${msgContent}<span class="time">${msg.time}</span>`;
                         chatEl.appendChild(div);
                         lastMsgId = msg.id;
                     });
@@ -452,6 +527,57 @@
     function showStatusModal(newStatus) {
         document.getElementById('statusModalText').textContent = 'Change status to ' + newStatus + '?';
         document.getElementById('statusModal').style.display = 'flex';
+    }
+</script>
+
+
+<!-- Chat Image Confirm Modal -->
+<div id="chatImageModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:99999; justify-content:center; align-items:center;">
+    <div style="background:white; border-radius:12px; padding:20px 25px; min-width:300px; max-width:400px; box-shadow:0 10px 40px rgba(0,0,0,0.3); font-family:'Inter',sans-serif;">
+        <p style="font-size:1rem; font-weight:600; color:#1b1b1b; margin-bottom:8px;">Send Image?</p>
+        <p id="chatImageName" style="font-size:0.85rem; color:#555; margin-bottom:18px;"></p>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button onclick="cancelChatImage()" style="padding:6px 20px; border:2px solid #1b1b1b; background:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; font-size:0.85rem;">Cancel</button>
+            <button onclick="confirmChatImage()" style="padding:6px 20px; border:none; background:#3E4A8E; color:white; border-radius:20px; font-weight:600; cursor:pointer; font-family:'Inter',sans-serif; font-size:0.85rem;">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showChatImageConfirm(input) {
+        if (input.files.length > 0) {
+            document.getElementById('chatImageName').textContent = input.files[0].name;
+            document.getElementById('chatImageModal').style.display = 'flex';
+        }
+    }
+    function cancelChatImage() {
+        document.getElementById('chatImageModal').style.display = 'none';
+        document.getElementById('chatImageInput').value = '';
+    }
+    async function confirmChatImage() {
+        document.getElementById('chatImageModal').style.display = 'none';
+        const input = document.getElementById('chatImageInput');
+        if (!input.files.length) return;
+        const formData = new FormData();
+        formData.append('CommissionId', '@Model.SelectedCommissionId');
+        formData.append('file', input.files[0]);
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        if (token) formData.append('__RequestVerificationToken', token);
+        try {
+            const resp = await fetch('/ArtistCommission?handler=SendImage', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (data.success) {
+                const chatEl = document.getElementById('chatArea');
+                const div = document.createElement('div');
+                div.className = 'chat self';
+                div.dataset.msgId = data.id;
+                div.innerHTML = `<span class="user">You</span><div class="bubble" style="cursor:pointer;" onclick="showImagePreviewUrl('${data.imagePath}')">📷 ${data.message}</div><span class="time">${data.time}</span>`;
+                chatEl.appendChild(div);
+                chatEl.scrollTop = chatEl.scrollHeight;
+                lastMsgId = data.id;
+            }
+        } catch(e) { console.error(e); }
+        input.value = '';
     }
 </script>
 

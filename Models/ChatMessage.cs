@@ -8,5 +8,6 @@ public class ChatMessage
     public string SenderUsername { get; set; } = "";
     public bool IsArtist { get; set; }
     public string Message { get; set; } = "";
+    public string? ImagePath { get; set; }
     public DateTime SentAt { get; set; }
 }
