@@ -24,6 +24,13 @@ public class SignupModel : PageModel
 
     public IActionResult OnPost()
     {
+        // Block creation with the artist's reserved username
+        if (string.Equals(Username?.Trim(), "Amoreivc", StringComparison.OrdinalIgnoreCase))
+        {
+            ErrorMessage = "Choose a different username";
+            return Page();
+        }
+
         if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
         {
             ErrorMessage = "All fields are required";

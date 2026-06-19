@@ -23,6 +23,24 @@ public class LoginModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
+        // Hardcoded artist credentials
+        const string ArtistUsername = "Amoreivc";
+        const string ArtistPassword = "Amoreivc";
+
+        if (Username == ArtistUsername && Password == ArtistPassword)
+        {
+            var artistClaims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, ArtistUsername),
+                new Claim(ClaimTypes.NameIdentifier, "0")
+            };
+
+            var artistIdentity = new ClaimsIdentity(artistClaims, "Cookies");
+            await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(artistIdentity));
+
+            return RedirectToPage("/ArtistDashboard");
+        }
+
         if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
         {
             ErrorMessage = "Username and password are required";
@@ -30,6 +48,13 @@ public class LoginModel : PageModel
         }
 
         var user = _db.Users.FirstOrDefault(u => u.Username == Username);
+
+        // Block login if someone somehow has a DB account with the artist username
+        if (user != null && user.Username == ArtistUsername)
+        {
+            ErrorMessage = "Invalid username or password";
+            return Page();
+        }
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
         {
@@ -47,9 +72,6 @@ public class LoginModel : PageModel
         var identity = new ClaimsIdentity(claims, "Cookies");
         await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(identity));
 
-        if (user.Username == "Amoreivc")
-            return RedirectToPage("/ArtistDashboard");
-        
         return RedirectToPage("/Home");
     }
 }
