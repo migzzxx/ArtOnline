@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ArtOnline.Data;
 using ArtOnline.Models;
+using ArtOnline;
 
 var builder = WebApplication.CreateBuilder(args);
 
