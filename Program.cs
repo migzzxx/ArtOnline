@@ -63,7 +63,7 @@ using (var scope = app.Services.CreateScope())
         {
             Version = 1,
             IsCurrent = true,
-            CreatedAt = DateTime.Now,
+            CreatedAt = TimeHelper.Now,
             FieldsJson = defaultFields
         });
         db.SaveChanges();

@@ -54,7 +54,7 @@ public class ArtistFormModel : PageModel
         {
             Version = newVersion,
             IsCurrent = true,
-            CreatedAt = DateTime.Now,
+            CreatedAt = TimeHelper.Now,
             FieldsJson = fieldsData
         };
 

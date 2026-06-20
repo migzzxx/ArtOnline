@@ -88,7 +88,7 @@
                     <div style="flex:1;"></div>
                     @foreach (var msg in Model.ChatMessages)
                     {
-                        var timeDiff = DateTime.Now - msg.SentAt;
+                        var timeDiff = TimeHelper.Now - msg.SentAt;
                         var timeDisplay = timeDiff.TotalHours < 24 ? msg.SentAt.ToString("h:mm tt") : msg.SentAt.ToString("dd/MM/yyyy");
                         var displayName = msg.IsArtist ? "You" : "@" + Model.CommissionUsername;
                         var bubbleClass = msg.IsArtist ? "self" : "other";

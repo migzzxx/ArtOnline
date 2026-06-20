@@ -70,7 +70,7 @@ public class ArtistGalleryModel : PageModel
             Description = description ?? "",
             Tags = tags ?? "",
             HeartCount = 0,
-            DateAdded = DateTime.Now
+            DateAdded = TimeHelper.Now
         };
 
         _db.GalleryImages.Add(image);

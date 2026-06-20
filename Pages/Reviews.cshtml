@@ -47,7 +47,7 @@
                     <div style="flex:1;"></div>
                     @foreach (var review in Model.AllReviews)
                     {
-                        var timeDiff = DateTime.Now - review.SentAt;
+                        var timeDiff = TimeHelper.Now - review.SentAt;
                         var timeDisplay = timeDiff.TotalHours < 24 ? review.SentAt.ToString("h:mm tt") : review.SentAt.ToString("dd/MM/yyyy");
                         <div class="chat">
                             <span class="user">@@@review.Username</span>

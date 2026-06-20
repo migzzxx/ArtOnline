@@ -78,7 +78,7 @@ public class ReviewsModel : PageModel
             CommissionSubject = commission.Subject,
             Message = ReviewMessage,
             Rating = Rating,
-            SentAt = DateTime.Now
+            SentAt = TimeHelper.Now
         };
 
         _db.Reviews.Add(review);

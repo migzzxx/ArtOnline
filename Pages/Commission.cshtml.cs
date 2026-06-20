@@ -117,7 +117,7 @@ public class CommissionModel : PageModel
                 SenderUsername = username,
                 IsArtist = false,
                 Message = ChatMessageText.Trim(),
-                SentAt = DateTime.Now
+                SentAt = TimeHelper.Now
             };
 
             _db.ChatMessages.Add(msg);
@@ -340,7 +340,7 @@ public class CommissionModel : PageModel
         // Update customJson with file paths included
         customJson = JsonSerializer.Serialize(fieldValues);
 
-        var now = DateTime.Now;
+        var now = TimeHelper.Now;
         var commission = new Commission
         {
             UserId = userId,
@@ -400,7 +400,7 @@ public class CommissionModel : PageModel
             IsArtist = false,
             Message = file.FileName,
             ImagePath = savedPath,
-            SentAt = DateTime.Now
+            SentAt = TimeHelper.Now
         };
         _db.ChatMessages.Add(msg);
         await _db.SaveChangesAsync();
@@ -419,7 +419,7 @@ public class CommissionModel : PageModel
                 m.IsArtist,
                 m.ImagePath,
                 m.SenderUsername,
-                Time = (DateTime.Now - m.SentAt).TotalHours < 24 ? m.SentAt.ToString("h:mm tt") : m.SentAt.ToString("dd/MM/yyyy")
+                Time = (TimeHelper.Now - m.SentAt).TotalHours < 24 ? m.SentAt.ToString("h:mm tt") : m.SentAt.ToString("dd/MM/yyyy")
             })
             .ToList();
         return new JsonResult(messages);

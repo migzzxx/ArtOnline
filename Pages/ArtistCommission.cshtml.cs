@@ -57,7 +57,7 @@ public class ArtistCommissionModel : PageModel
                 SenderUsername = "Amoreivc",
                 IsArtist = true,
                 Message = ChatMessageText,
-                SentAt = DateTime.Now
+                SentAt = TimeHelper.Now
             };
 
             _db.ChatMessages.Add(msg);
@@ -138,7 +138,7 @@ public class ArtistCommissionModel : PageModel
             IsArtist = true,
             Message = file.FileName,
             ImagePath = savedPath,
-            SentAt = DateTime.Now
+            SentAt = TimeHelper.Now
         };
         _db.ChatMessages.Add(msg);
         await _db.SaveChangesAsync();
@@ -157,7 +157,7 @@ public class ArtistCommissionModel : PageModel
                 m.IsArtist,
                 m.SenderUsername,
                 m.ImagePath,
-                Time = (DateTime.Now - m.SentAt).TotalHours < 24 ? m.SentAt.ToString("h:mm tt") : m.SentAt.ToString("dd/MM/yyyy")
+                Time = (TimeHelper.Now - m.SentAt).TotalHours < 24 ? m.SentAt.ToString("h:mm tt") : m.SentAt.ToString("dd/MM/yyyy")
             })
             .ToList();
         return new JsonResult(messages);

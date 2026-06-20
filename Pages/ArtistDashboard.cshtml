@@ -37,8 +37,8 @@
                     <span class="material-symbols-rounded">filter_list</span>
                 </div>
                 <div class="dat">
-                    <p id="liveTime">@DateTime.Now.ToString("h:mm tt")</p>
-                    <p id="liveDate">@DateTime.Now.ToString("MMMM dd, yyyy")</p>
+                    <p id="liveTime">@TimeHelper.Now.ToString("h:mm tt")</p>
+                    <p id="liveDate">@TimeHelper.Now.ToString("MMMM dd, yyyy")</p>
                 </div>
             </div>
             <div class="wrap">
@@ -74,7 +74,7 @@
                     <div style="flex:1;"></div>
                     @foreach (var review in Model.AllReviews)
                     {
-                        var timeDiff = DateTime.Now - review.SentAt;
+                        var timeDiff = TimeHelper.Now - review.SentAt;
                         var timeDisplay = timeDiff.TotalHours < 24 ? review.SentAt.ToString("h:mm tt") : review.SentAt.ToString("dd/MM/yyyy");
                         <div class="review">
                             <p class="name">@@@review.Username</p>
